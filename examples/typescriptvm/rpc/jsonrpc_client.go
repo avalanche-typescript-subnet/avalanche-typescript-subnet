@@ -157,3 +157,29 @@ func (cli *JSONRPCClient) Parser(ctx context.Context) (chain.Parser, error) {
 	}
 	return &Parser{cli.networkID, cli.chainID, g}, nil
 }
+
+func (cli *JSONRPCClient) ContractBytecode(ctx context.Context, addr string) ([]byte, error) {
+	resp := new(ContractBytecodeReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"contractBytecode",
+		&ContractBytecodeArgs{
+			Address: addr,
+		},
+		resp,
+	)
+	return resp.Bytecode, err
+}
+
+func (cli *JSONRPCClient) ContractState(ctx context.Context, addr string) ([]byte, error) {
+	resp := new(ContractStateReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"contractState",
+		&ContractStateArgs{
+			Address: addr,
+		},
+		resp,
+	)
+	return resp.State, err
+}

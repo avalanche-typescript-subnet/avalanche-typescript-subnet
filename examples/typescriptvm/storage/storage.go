@@ -41,13 +41,17 @@ const (
 	txPrefix = 0x0
 
 	// stateDB
-	balancePrefix   = 0x0
-	heightPrefix    = 0x1
-	timestampPrefix = 0x2
-	feePrefix       = 0x3
+	balancePrefix          = 0x0
+	heightPrefix           = 0x1
+	timestampPrefix        = 0x2
+	feePrefix              = 0x3
+	contractBytecodePrefix = 0x4
+	contractStatePrefix    = 0x5
 )
 
 const BalanceChunks uint16 = 1
+const ContractBytecodeChunks uint16 = 2048 // 128kb / 64 bytes
+const ContractStateChunks uint16 = 8192    // 512kb / 64 bytes
 
 var (
 	failureByte  = byte(0x0)
