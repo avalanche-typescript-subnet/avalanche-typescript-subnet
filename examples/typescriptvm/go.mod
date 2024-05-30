@@ -1,4 +1,4 @@
-module github.com/ava-labs/hypersdk/examples/morpheusvm
+module github.com/ava-labs/hypersdk/examples/typescriptvm
 
 go 1.21.10
 

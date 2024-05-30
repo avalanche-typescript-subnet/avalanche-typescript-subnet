@@ -18,7 +18,7 @@ import (
 	"github.com/ava-labs/hypersdk/state"
 
 	smath "github.com/ava-labs/avalanchego/utils/math"
-	mconsts "github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
+	mconsts "github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 )
 
 type ReadState func(context.Context, [][]byte) ([][]byte, []error)

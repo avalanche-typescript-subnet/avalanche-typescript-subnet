@@ -8,9 +8,9 @@ import (
 
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/actions"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/auth"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/auth"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 )
 
 // Setup types

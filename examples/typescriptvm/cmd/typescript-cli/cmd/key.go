@@ -15,11 +15,11 @@ import (
 	"github.com/ava-labs/hypersdk/crypto/bls"
 	"github.com/ava-labs/hypersdk/crypto/ed25519"
 	"github.com/ava-labs/hypersdk/crypto/secp256r1"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/auth"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/auth"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 	"github.com/ava-labs/hypersdk/utils"
 
-	brpc "github.com/ava-labs/hypersdk/examples/morpheusvm/rpc"
+	brpc "github.com/ava-labs/hypersdk/examples/typescriptvm/rpc"
 )
 
 const (

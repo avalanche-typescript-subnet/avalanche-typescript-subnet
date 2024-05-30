@@ -4,7 +4,7 @@
 package auth
 
 import (
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 	"github.com/ava-labs/hypersdk/vm"
 )
 

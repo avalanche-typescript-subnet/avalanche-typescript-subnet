@@ -9,8 +9,8 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 
 	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
 	"github.com/ava-labs/hypersdk/fees"
 )
 
