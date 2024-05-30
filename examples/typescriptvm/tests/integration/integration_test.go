@@ -35,18 +35,18 @@ import (
 	"github.com/ava-labs/hypersdk/consts"
 	"github.com/ava-labs/hypersdk/crypto/ed25519"
 	"github.com/ava-labs/hypersdk/crypto/secp256r1"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/actions"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/auth"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/controller"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/auth"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/controller"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
 	"github.com/ava-labs/hypersdk/fees"
 	"github.com/ava-labs/hypersdk/pubsub"
 	"github.com/ava-labs/hypersdk/rpc"
 	"github.com/ava-labs/hypersdk/vm"
 
 	hbls "github.com/ava-labs/hypersdk/crypto/bls"
-	lconsts "github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
-	lrpc "github.com/ava-labs/hypersdk/examples/morpheusvm/rpc"
+	lconsts "github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
+	lrpc "github.com/ava-labs/hypersdk/examples/typescriptvm/rpc"
 	hutils "github.com/ava-labs/hypersdk/utils"
 	ginkgo "github.com/onsi/ginkgo/v2"
 )
@@ -98,7 +98,7 @@ func init() {
 
 func TestIntegration(t *testing.T) {
 	gomega.RegisterFailHandler(ginkgo.Fail)
-	ginkgo.RunSpecs(t, "morpheusvm integration test suites")
+	ginkgo.RunSpecs(t, "typescriptvm integration test suites")
 }
 
 func init() {

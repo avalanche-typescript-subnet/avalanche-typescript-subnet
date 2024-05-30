@@ -10,7 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/trace"
 
 	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
 	"github.com/ava-labs/hypersdk/fees"
 )
 
@@ -19,4 +19,6 @@ type Controller interface {
 	Tracer() trace.Tracer
 	GetTransaction(context.Context, ids.ID) (bool, int64, bool, fees.Dimensions, uint64, error)
 	GetBalanceFromState(context.Context, codec.Address) (uint64, error)
+	GetContractBytecodeFromState(context.Context, codec.Address) ([]byte, error)
+	GetContractStateFromState(context.Context, codec.Address) ([]byte, error)
 }

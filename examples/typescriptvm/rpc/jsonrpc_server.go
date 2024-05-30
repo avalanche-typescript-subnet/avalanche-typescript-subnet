@@ -9,8 +9,8 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 
 	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
 	"github.com/ava-labs/hypersdk/fees"
 )
 
@@ -81,5 +81,53 @@ func (j *JSONRPCServer) Balance(req *http.Request, args *BalanceArgs, reply *Bal
 		return err
 	}
 	reply.Amount = balance
+	return err
+}
+
+type ContractBytecodeArgs struct {
+	Address string `json:"address"`
+}
+
+type ContractBytecodeReply struct {
+	Bytecode []byte `json:"bytecode"`
+}
+
+func (j *JSONRPCServer) ContractBytecode(req *http.Request, args *ContractBytecodeArgs, reply *ContractBytecodeReply) error {
+	ctx, span := j.c.Tracer().Start(req.Context(), "Server.ContractBytecode")
+	defer span.End()
+
+	addr, err := codec.ParseAddressBech32(consts.HRP, args.Address)
+	if err != nil {
+		return err
+	}
+	bytecode, err := j.c.GetContractBytecodeFromState(ctx, addr)
+	if err != nil {
+		return err
+	}
+	reply.Bytecode = bytecode
+	return err
+}
+
+type ContractStateArgs struct {
+	Address string `json:"address"`
+}
+
+type ContractStateReply struct {
+	State []byte `json:"state"`
+}
+
+func (j *JSONRPCServer) ContractState(req *http.Request, args *ContractStateArgs, reply *ContractStateReply) error {
+	ctx, span := j.c.Tracer().Start(req.Context(), "Server.ContractState")
+	defer span.End()
+
+	addr, err := codec.ParseAddressBech32(consts.HRP, args.Address)
+	if err != nil {
+		return err
+	}
+	state, err := j.c.GetContractStateFromState(ctx, addr)
+	if err != nil {
+		return err
+	}
+	reply.State = state
 	return err
 }

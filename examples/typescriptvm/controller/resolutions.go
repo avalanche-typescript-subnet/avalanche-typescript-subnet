@@ -11,8 +11,8 @@ import (
 	"github.com/ava-labs/avalanchego/utils/logging"
 
 	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/genesis"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/storage"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/storage"
 	"github.com/ava-labs/hypersdk/fees"
 )
 
@@ -40,4 +40,18 @@ func (c *Controller) GetBalanceFromState(
 	acct codec.Address,
 ) (uint64, error) {
 	return storage.GetBalanceFromState(ctx, c.inner.ReadState, acct)
+}
+
+func (c *Controller) GetContractBytecodeFromState(
+	ctx context.Context,
+	acct codec.Address,
+) ([]byte, error) {
+	return storage.GetContractBytecodeFromState(ctx, c.inner.ReadState, acct)
+}
+
+func (c *Controller) GetContractStateFromState(
+	ctx context.Context,
+	acct codec.Address,
+) ([]byte, error) {
+	return storage.GetContractStateFromState(ctx, c.inner.ReadState, acct)
 }

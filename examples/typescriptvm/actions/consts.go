@@ -4,3 +4,4 @@
 package actions
 
 const TransferComputeUnits = 1
+const CreateContractComputeUnits = 1

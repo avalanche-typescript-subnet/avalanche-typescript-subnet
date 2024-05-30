@@ -15,7 +15,7 @@ import (
 
 const (
 	fsModeWrite     = 0o600
-	defaultDatabase = ".morpheus-cli"
+	defaultDatabase = ".typescript-cli"
 	defaultGenesis  = "genesis.json"
 )
 
@@ -40,9 +40,9 @@ var (
 	maxFee                int64
 
 	rootCmd = &cobra.Command{
-		Use:        "morpheus-cli",
-		Short:      "MorpheusVM CLI",
-		SuggestFor: []string{"morpheus-cli", "morpheuscli"},
+		Use:        "typescript-cli",
+		Short:      "typescriptvm CLI",
+		SuggestFor: []string{"typescript-cli", "typescriptcli"},
 	}
 )
 

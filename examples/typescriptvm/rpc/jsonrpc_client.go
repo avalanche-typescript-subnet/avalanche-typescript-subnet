@@ -9,12 +9,12 @@ import (
 
 	"github.com/ava-labs/avalanchego/ids"
 
-	_ "github.com/ava-labs/hypersdk/examples/morpheusvm/registry" // ensure registry populated
+	_ "github.com/ava-labs/hypersdk/examples/typescriptvm/registry" // ensure registry populated
 
 	"github.com/ava-labs/hypersdk/chain"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/consts"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/genesis"
-	"github.com/ava-labs/hypersdk/examples/morpheusvm/storage"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/storage"
 	"github.com/ava-labs/hypersdk/requester"
 	"github.com/ava-labs/hypersdk/rpc"
 	"github.com/ava-labs/hypersdk/utils"
@@ -156,4 +156,30 @@ func (cli *JSONRPCClient) Parser(ctx context.Context) (chain.Parser, error) {
 		return nil, err
 	}
 	return &Parser{cli.networkID, cli.chainID, g}, nil
+}
+
+func (cli *JSONRPCClient) ContractBytecode(ctx context.Context, addr string) ([]byte, error) {
+	resp := new(ContractBytecodeReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"contractBytecode",
+		&ContractBytecodeArgs{
+			Address: addr,
+		},
+		resp,
+	)
+	return resp.Bytecode, err
+}
+
+func (cli *JSONRPCClient) ContractState(ctx context.Context, addr string) ([]byte, error) {
+	resp := new(ContractStateReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"contractState",
+		&ContractStateArgs{
+			Address: addr,
+		},
+		resp,
+	)
+	return resp.State, err
 }
