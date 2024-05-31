@@ -37,4 +37,6 @@ run \
 # output generate coverage html
 go tool cover -html=integration.coverage.out -o=integration.coverage.html
 
-go test ./tests/integrationv2
+# FIXME: unite with other tests and add coverage
+go generate ./...
+go test ./tests/integrationv2/*
