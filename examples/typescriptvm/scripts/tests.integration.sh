@@ -36,3 +36,5 @@ run \
 
 # output generate coverage html
 go tool cover -html=integration.coverage.out -o=integration.coverage.html
+
+go test ./tests/integrationv2
