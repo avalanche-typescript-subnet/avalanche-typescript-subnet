@@ -12,35 +12,34 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
         value = payload[1];
     }
 
+    let stringAtSlotZero: string
+    let dataAtSlotZero: Record<string, number>
+
     switch (payload[0]) {
         case 0: // ACTION_READ
             console.log(`ACTION_READ`)
-            const dataRead: Record<string, number> = JSON.parse(
-                decoder.decode(
-                    getRawValue(0, 10)
-                )
-            );
-            console.log(dataRead[actorString]
-                ? `Balance of ${actorString.slice(0, 4)}...: ${dataRead[actorString]}`
-                : `No balance for ${actorString.slice(0, 4)}..., but here are balances: ${Object.keys(dataRead).map(key => `${key.slice(0, 4)}...: ${dataRead[key]}`).join(', ')}`
+            stringAtSlotZero = decoder.decode(
+                getRawValue(0, 10)
+            )
+            dataAtSlotZero = stringAtSlotZero === "" ? {} : JSON.parse(stringAtSlotZero);
+
+            console.log(dataAtSlotZero[actorString]
+                ? `Balance of ${actorString.slice(0, 4)}...: ${dataAtSlotZero[actorString]}`
+                : `No balance for ${actorString.slice(0, 4)}..., but here are balances: ${Object.keys(dataAtSlotZero).map(key => `${key.slice(0, 4)}...: ${dataAtSlotZero[key]}`).join(', ')}`
             )
 
-            return encoder.encode(JSON.stringify(dataRead[actorString] || 0));
+            return encoder.encode(JSON.stringify(dataAtSlotZero[actorString] || 0));
         case 1: // ACTION_INCREMENT
             console.log(`ACTION_INCREMENT value=${value}`)
-            const dataIncrement: Record<string, number> = JSON.parse(
-                decoder.decode(
-                    getRawValue(0, 10)
-                )
-            );
 
-            if (!dataIncrement[actorString]) {
-                dataIncrement[actorString] = 0;
-            }
-            dataIncrement[actorString] += value;
-            setRawValue(0, 10, encoder.encode(JSON.stringify(dataIncrement)));
+            stringAtSlotZero = decoder.decode(getRawValue(0, 10))
+            dataAtSlotZero = stringAtSlotZero === "" ? {} : JSON.parse(stringAtSlotZero);
 
-            console.log(`New balances: ${Object.keys(dataIncrement).map(key => `${key.slice(0, 4)}...: ${dataIncrement[key]}`).join(', ')}`)
+            dataAtSlotZero[actorString] = (dataAtSlotZero[actorString] || 0) + value;
+
+            setRawValue(0, 10, encoder.encode(JSON.stringify(dataAtSlotZero)));
+
+            console.log(`New balances: ${Object.keys(dataAtSlotZero).map(key => `${key.slice(0, 4)}...: ${dataAtSlotZero[key]}`).join(', ')}`)
 
             return new Uint8Array();
         case 2: // ACTION_LOAD_CPU

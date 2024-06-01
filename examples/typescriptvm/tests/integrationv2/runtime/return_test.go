@@ -2,15 +2,17 @@ package runtime_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReturn(t *testing.T) {
 	exec := runtime.NewJavyExec()
-	stateProvider := &DummyStateProvider{State: map[[4]byte][]byte{{0, 0, 0, 0xA}: {0x7b, 0x7d}}}
+	stateProvider := &DummyStateProvider{State: map[[4]byte][]byte{}}
 
 	actor1Bytes := createActorAddress(1)
 	actor2Bytes := createActorAddress(2)
@@ -22,7 +24,7 @@ func TestReturn(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateProvider.StateProvider,
-		Payload:       append([]byte{1}, 7),
+		Payload:       []byte{1, 7},
 	}
 
 	//execute 2 times for actor 1
@@ -32,10 +34,15 @@ func TestReturn(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
+
+		require.Equal(t, true, res.Result.Success)
+
+		fmt.Printf("UpdatedKeys: %v\n", res.Result.UpdatedKeys)
 		for updatedKey, updatedVal := range res.Result.UpdatedKeys {
 			stateProvider.SetState(updatedKey, updatedVal)
 		}
 	}
+	stateProvider.Print()
 
 	//execute 1 time for actor 2
 	params.Actor = actor2Bytes

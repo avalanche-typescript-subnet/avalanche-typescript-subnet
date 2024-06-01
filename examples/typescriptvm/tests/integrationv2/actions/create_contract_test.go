@@ -41,5 +41,4 @@ func TestCreateContract(t *testing.T) {
 	bytecodeFromChain, err := prep.instance.lcli.ContractBytecode(context.Background(), contractAddrString)
 	require.NoError(t, err)
 	require.Equal(t, []byte{0x01, 0x02, 0x03}, bytecodeFromChain)
-
 }

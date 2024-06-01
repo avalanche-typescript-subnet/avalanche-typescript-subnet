@@ -26,11 +26,20 @@ type DummyStateProvider struct {
 func (d *DummyStateProvider) StateProvider(key [4]byte) ([]byte, error) {
 	value, exists := d.State[key]
 	if !exists {
-		return nil, fmt.Errorf("key %v not found", key)
+		return []byte{}, nil
 	}
 	return value, nil
 }
 
 func (d *DummyStateProvider) SetState(key [4]byte, value []byte) {
 	d.State[key] = value
+	d.Print()
+}
+
+func (d *DummyStateProvider) Print() {
+	fmt.Printf("State now has %d entries\n", len(d.State))
+	for k, v := range d.State {
+		fmt.Printf("%x: %x\n", k, v)
+	}
+	fmt.Println()
 }
