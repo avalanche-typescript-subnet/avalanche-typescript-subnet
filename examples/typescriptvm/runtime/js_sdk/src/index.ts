@@ -14,6 +14,8 @@ const keyHexAddress = (slot: number, chunks: number) => {
     return `0x${slot.toString(16).padStart(4, '0')}${chunks.toString(16).padStart(4, '0')}`
 }
 
+console.warn = console.log//FIXME: monkey-patching
+
 class TracebleDB {
     private _state: Record<string, Uint8Array>;
     private _reads: Set<string>;
@@ -46,7 +48,10 @@ class TracebleDB {
             throw new Error(`Value is larger than the size of the key (max size: ${64 * chunks} in ${chunks} 64-byte chunks, value: ${value.length})`);
         }
 
-        if (this._state[address] && this._state[address].every((byte, i) => byte === value[i])) {
+        if (this._state[address]
+            && (this._state[address].length === value.length)
+            && this._state[address].every((byte, i) => byte === value[i])
+        ) {
             console.warn(`Skipping write of ${address} because it is already set to the same value.`);
             return;
         }
