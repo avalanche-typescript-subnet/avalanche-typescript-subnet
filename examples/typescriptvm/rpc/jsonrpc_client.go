@@ -170,16 +170,3 @@ func (cli *JSONRPCClient) ContractBytecode(ctx context.Context, addr string) ([]
 	)
 	return resp.Bytecode, err
 }
-
-func (cli *JSONRPCClient) ContractState(ctx context.Context, addr string) ([]byte, error) {
-	resp := new(ContractStateReply)
-	err := cli.requester.SendRequest(
-		ctx,
-		"contractState",
-		&ContractStateArgs{
-			Address: addr,
-		},
-		resp,
-	)
-	return resp.State, err
-}

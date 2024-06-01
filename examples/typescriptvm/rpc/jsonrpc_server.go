@@ -107,27 +107,3 @@ func (j *JSONRPCServer) ContractBytecode(req *http.Request, args *ContractByteco
 	reply.Bytecode = bytecode
 	return err
 }
-
-type ContractStateArgs struct {
-	Address string `json:"address"`
-}
-
-type ContractStateReply struct {
-	State []byte `json:"state"`
-}
-
-func (j *JSONRPCServer) ContractState(req *http.Request, args *ContractStateArgs, reply *ContractStateReply) error {
-	ctx, span := j.c.Tracer().Start(req.Context(), "Server.ContractState")
-	defer span.End()
-
-	addr, err := codec.ParseAddressBech32(consts.HRP, args.Address)
-	if err != nil {
-		return err
-	}
-	state, err := j.c.GetContractStateFromState(ctx, addr)
-	if err != nil {
-		return err
-	}
-	reply.State = state
-	return err
-}

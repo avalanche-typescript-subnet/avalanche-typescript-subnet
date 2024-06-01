@@ -19,7 +19,6 @@ var _ chain.Action = (*CreateContract)(nil)
 
 type CreateContract struct {
 	Bytecode      []byte
-	InitialState  []byte
 	Discriminator uint16
 }
 
@@ -31,13 +30,12 @@ func (cc *CreateContract) StateKeys(actor codec.Address, _ ids.ID) state.Keys {
 	contractAddress := storage.GenerateContractAddress(actor, cc.Discriminator)
 
 	return state.Keys{
-		string(storage.ContractStateKey(contractAddress)):    state.All,
 		string(storage.ContractBytecodeKey(contractAddress)): state.All,
 	}
 }
 
 func (*CreateContract) StateKeysMaxChunks() []uint16 {
-	return []uint16{storage.ContractStateChunks, storage.ContractBytecodeChunks}
+	return []uint16{storage.ContractBytecodeChunks}
 }
 
 func (cc *CreateContract) Execute(
@@ -48,7 +46,7 @@ func (cc *CreateContract) Execute(
 	actor codec.Address,
 	_ ids.ID,
 ) ([][]byte, error) {
-	addr, err := storage.CreateContract(ctx, mu, actor, cc.Bytecode, cc.InitialState, cc.Discriminator)
+	addr, err := storage.CreateContract(ctx, mu, actor, cc.Bytecode, cc.Discriminator)
 	if err != nil {
 		return nil, err // FIXME: Consider defining distinct errors in outputs.go for better clarity
 	}
@@ -65,12 +63,11 @@ func (*CreateContract) ComputeUnits(chain.Rules) uint64 {
 }
 
 func (cc *CreateContract) Size() int {
-	return len(cc.Bytecode) + len(cc.InitialState) + consts.Uint8Len
+	return len(cc.Bytecode) + consts.Uint8Len
 }
 
 func (cc *CreateContract) Marshal(p *codec.Packer) {
 	p.PackBytes(cc.Bytecode)
-	p.PackBytes(cc.InitialState)
 
 	discriminatorBytes := make([]byte, 2)
 	binary.BigEndian.PutUint16(discriminatorBytes, cc.Discriminator)
@@ -80,7 +77,6 @@ func (cc *CreateContract) Marshal(p *codec.Packer) {
 func UnmarshalCreateContract(p *codec.Packer) (chain.Action, error) {
 	var action CreateContract
 	p.UnpackBytes(-1, false, &action.Bytecode)
-	p.UnpackBytes(-1, false, &action.InitialState)
 
 	var discriminatorBytes []byte = make([]byte, 2)
 	p.UnpackBytes(2, false, &discriminatorBytes)

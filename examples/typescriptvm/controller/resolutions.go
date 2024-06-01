@@ -48,10 +48,3 @@ func (c *Controller) GetContractBytecodeFromState(
 ) ([]byte, error) {
 	return storage.GetContractBytecodeFromState(ctx, c.inner.ReadState, acct)
 }
-
-func (c *Controller) GetContractStateFromState(
-	ctx context.Context,
-	acct codec.Address,
-) ([]byte, error) {
-	return storage.GetContractStateFromState(ctx, c.inner.ReadState, acct)
-}

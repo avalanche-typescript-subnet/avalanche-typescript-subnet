@@ -51,7 +51,6 @@ const (
 
 const BalanceChunks uint16 = 1
 const ContractBytecodeChunks uint16 = 2048 // 128kb / 64 bytes
-const ContractStateChunks uint16 = 8192    // 512kb / 64 bytes
 
 var (
 	failureByte  = byte(0x0)

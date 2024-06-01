@@ -11,7 +11,6 @@ import (
 
 func TestCreateContract(t *testing.T) {
 	dummyBytecode := []byte{0x01, 0x02, 0x03}
-	dummyState := []byte{0x04, 0x05, 0x06}
 	discriminator := 123
 
 	//send CreateContract tx
@@ -25,7 +24,6 @@ func TestCreateContract(t *testing.T) {
 		parser,
 		[]chain.Action{&actions.CreateContract{
 			Bytecode:      dummyBytecode,
-			InitialState:  dummyState,
 			Discriminator: uint16(discriminator),
 		}},
 		prep.factory,
@@ -39,13 +37,9 @@ func TestCreateContract(t *testing.T) {
 
 	contractAddrString := string(results[0].Outputs[0][0])
 
-	//check bytecode and state
+	//check bytecode
 	bytecodeFromChain, err := prep.instance.lcli.ContractBytecode(context.Background(), contractAddrString)
 	require.NoError(t, err)
 	require.Equal(t, []byte{0x01, 0x02, 0x03}, bytecodeFromChain)
-
-	stateFromChain, err := prep.instance.lcli.ContractState(context.Background(), contractAddrString)
-	require.NoError(t, err)
-	require.Equal(t, []byte{0x04, 0x05, 0x06}, stateFromChain)
 
 }
