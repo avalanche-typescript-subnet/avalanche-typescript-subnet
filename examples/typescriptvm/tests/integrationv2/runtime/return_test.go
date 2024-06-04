@@ -24,7 +24,7 @@ func TestReturn(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateProvider.StateProvider,
-		Payload:       []byte{1, 7},
+		Payload:       []byte{CONTRACT_ACTION_INCREMENT, 7},
 	}
 
 	//execute 2 times for actor 1
@@ -55,7 +55,7 @@ func TestReturn(t *testing.T) {
 	}
 
 	//get result for actor 1
-	params.Payload = []byte{0}
+	params.Payload = []byte{CONTRACT_ACTION_READ}
 	params.Actor = actor1Bytes
 
 	res, err = exec.Execute(params)
@@ -76,7 +76,7 @@ func TestReturn(t *testing.T) {
 	}
 
 	//get result for actor 2
-	params.Payload = []byte{0}
+	params.Payload = []byte{CONTRACT_ACTION_READ}
 	params.Actor = actor2Bytes
 	res, err = exec.Execute(params)
 	if err != nil {
@@ -94,7 +94,7 @@ func TestReturn(t *testing.T) {
 	}
 
 	//check zero balance for actor 3
-	params.Payload = []byte{0}
+	params.Payload = []byte{CONTRACT_ACTION_READ}
 	params.Actor = actor3Bytes
 	res, err = exec.Execute(params)
 	if err != nil {
@@ -108,5 +108,23 @@ func TestReturn(t *testing.T) {
 
 	if actor3FinalBalance != 0 {
 		t.Fatalf("Expected balance %d, got %d", 0, actor3FinalBalance)
+	}
+}
+
+func TestEcho(t *testing.T) {
+	exec := runtime.NewJavyExec()
+	params := DEFAULT_PARAMS_LIMITS
+	params.Payload = []byte{CONTRACT_ACTION_ECHO, 124}
+	res, err := exec.Execute(params)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var result uint32
+	if err := json.Unmarshal(res.Result.Result, &result); err != nil {
+		t.Fatal(err)
+	}
+	if result != 124 {
+		t.Fatalf("Expected result %d, got %d", 124, result)
 	}
 }

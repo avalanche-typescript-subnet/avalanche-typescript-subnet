@@ -22,7 +22,7 @@ func TestWriteKeys(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateprovider.StateProvider,
-		Payload:       []byte{3, 4}, //ACTION_WRITE_MANY_SLOTS, value=4
+		Payload:       []byte{CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
 	}
 
 	res, err := exec.Execute(params)
@@ -61,7 +61,7 @@ func TestReadKeys(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateprovider.StateProvider,
-		Payload:       []byte{3, 4}, //ACTION_WRITE_MANY_SLOTS, value=4
+		Payload:       []byte{CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
 	}
 
 	res, err := exec.Execute(params)
@@ -74,7 +74,7 @@ func TestReadKeys(t *testing.T) {
 	require.Equal(t, 0, len(res.Result.ReadKeys))
 
 	//read
-	params.Payload = []byte{4, 4} //ACTION_READ_MANY_SLOTS, value=4
+	params.Payload = []byte{CONTRACT_ACTION_READ_MANY_SLOTS, 4}
 	res, err = exec.Execute(params)
 	require.NoError(t, err)
 

@@ -3,6 +3,13 @@ import { registerRawFunction, types, encoders } from "../../../../runtime/js_sdk
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
+const CONTRACT_ACTION_READ = 0;
+const CONTRACT_ACTION_INCREMENT = 1;
+const CONTRACT_ACTION_LOAD_CPU = 2;
+const CONTRACT_ACTION_WRITE_MANY_SLOTS = 3;
+const CONTRACT_ACTION_READ_MANY_SLOTS = 4;
+const CONTRACT_ACTION_ECHO = 5;
+
 registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.GetRawValue, setRawValue: types.SetRawValue) => {
     //unpacking args
     const actorString = encoders.Uint8ArrayToBase64(actor);
@@ -16,8 +23,8 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
     let dataAtSlotZero: Record<string, number>
 
     switch (payload[0]) {
-        case 0: // ACTION_READ
-            console.log(`ACTION_READ`)
+        case CONTRACT_ACTION_READ:
+            console.log(`CONTRACT_ACTION_READ`)
             stringAtSlotZero = decoder.decode(
                 getRawValue(0, 10)
             )
@@ -29,8 +36,8 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
             )
 
             return encoder.encode(JSON.stringify(dataAtSlotZero[actorString] || 0));
-        case 1: // ACTION_INCREMENT
-            console.log(`ACTION_INCREMENT value=${value}`)
+        case CONTRACT_ACTION_INCREMENT:
+            console.log(`CONTRACT_ACTION_INCREMENT value=${value}`)
 
             stringAtSlotZero = decoder.decode(getRawValue(0, 10))
             dataAtSlotZero = stringAtSlotZero === "" ? {} : JSON.parse(stringAtSlotZero);
@@ -42,8 +49,8 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
             console.log(`New balances: ${Object.keys(dataAtSlotZero).map(key => `${key.slice(0, 4)}...: ${dataAtSlotZero[key]}`).join(', ')}`)
 
             return new Uint8Array();
-        case 2: // ACTION_LOAD_CPU
-            console.log(`ACTION_LOAD_CPU value=${value}`)
+        case CONTRACT_ACTION_LOAD_CPU:
+            console.log(`CONTRACT_ACTION_LOAD_CPU value=${value}`)
             const memoryBalloon = new Array(value * value * 1024);
             for (let i = 0; i < value; i++) {
                 for (let j = 0; j < value; j++) {
@@ -54,8 +61,8 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
             }
             const summ = memoryBalloon.reduce((acc, curr) => acc + curr, 0);
             return encoder.encode(JSON.stringify(summ));
-        case 3: //ACTION_WRITE_MANY_SLOTS
-            console.log(`ACTION_WRITE_MANY_SLOTS value=${value}`)
+        case CONTRACT_ACTION_WRITE_MANY_SLOTS:
+            console.log(`CONTRACT_ACTION_WRITE_MANY_SLOTS value=${value}`)
             for (let i = 1; i <= value; i++) {
                 setRawValue(
                     i,
@@ -64,8 +71,8 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
                 );
             }
             return new Uint8Array();
-        case 4: //ACTION_READ_MANY_SLOTS
-            console.log(`ACTION_READ_MANY_SLOTS value=${value}`)
+        case CONTRACT_ACTION_READ_MANY_SLOTS:
+            console.log(`CONTRACT_ACTION_READ_MANY_SLOTS value=${value}`)
             let result = new Uint8Array();
             for (let i = 0; i < value; i++) {
                 const fromSlot = getRawValue(i + 1, 6);
@@ -75,6 +82,9 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
                 result = tempResult;
             }
             return result;
+        case CONTRACT_ACTION_ECHO:
+            console.log(`CONTRACT_ACTION_ECHO value=${value}`)
+            return encoder.encode(JSON.stringify(value));
         default:
             throw new Error("Invalid action code");
     }

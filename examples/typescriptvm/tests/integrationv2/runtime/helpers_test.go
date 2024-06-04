@@ -9,6 +9,13 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 )
 
+const CONTRACT_ACTION_READ = 0
+const CONTRACT_ACTION_INCREMENT = 1
+const CONTRACT_ACTION_LOAD_CPU = 2
+const CONTRACT_ACTION_WRITE_MANY_SLOTS = 3
+const CONTRACT_ACTION_READ_MANY_SLOTS = 4
+const CONTRACT_ACTION_ECHO = 5
+
 //go:embed test_assets/simpleCounter.wasm
 var testWasmBytes []byte
 

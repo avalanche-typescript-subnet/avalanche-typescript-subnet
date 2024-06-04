@@ -15,7 +15,7 @@ var DEFAULT_PARAMS_LIMITS = runtime.JavyExecParams{
 	MaxTime:       time.Millisecond * 200,
 	MaxMemory:     1024 * 1024 * 100,
 	Bytecode:      &testWasmBytes,
-	Payload:       []byte{0}, //read
+	Payload:       []byte{CONTRACT_ACTION_READ},
 	Actor:         []byte{},
 	StateProvider: (&DummyStateProvider{}).StateProvider,
 }
@@ -32,12 +32,12 @@ func TestMaxFuel(t *testing.T) {
 		payload     []byte
 		expectError bool
 	}{
-		{"0x10, 0,  error", 0, []byte{0x02, 0x10}, true},
-		{"0x10, 125M, no error", 125 * MIL, []byte{0x02, 0x10}, false},
-		{"0x11, 125M, error", 125 * MIL, []byte{0x02, 0x11}, true},
-		{"0x11, 130M, no error", 130 * MIL, []byte{0x02, 0x11}, false},
-		{"0x12, 130M, error", 130 * MIL, []byte{0x02, 0x12}, true},
-		{"0x12, 150M, no error", 150 * MIL, []byte{0x02, 0x12}, false},
+		{"0x10, 0,  error", 0, []byte{CONTRACT_ACTION_LOAD_CPU, 0x10}, true},
+		{"0x10, 125M, no error", 125 * MIL, []byte{CONTRACT_ACTION_LOAD_CPU, 0x10}, false},
+		{"0x11, 125M, error", 125 * MIL, []byte{CONTRACT_ACTION_LOAD_CPU, 0x11}, true},
+		{"0x11, 130M, no error", 130 * MIL, []byte{CONTRACT_ACTION_LOAD_CPU, 0x11}, false},
+		{"0x12, 130M, error", 130 * MIL, []byte{CONTRACT_ACTION_LOAD_CPU, 0x12}, true},
+		{"0x12, 150M, no error", 150 * MIL, []byte{CONTRACT_ACTION_LOAD_CPU, 0x12}, false},
 	}
 
 	for _, tc := range testCases {
@@ -66,7 +66,7 @@ func TestMaxTime(t *testing.T) {
 	exec := runtime.NewJavyExec()
 
 	params := DEFAULT_PARAMS_LIMITS
-	params.Payload = []byte{0x03, 0x10}
+	params.Payload = []byte{CONTRACT_ACTION_WRITE_MANY_SLOTS, 0x10}
 
 	_, err := exec.Execute(params)
 	if err != nil {
