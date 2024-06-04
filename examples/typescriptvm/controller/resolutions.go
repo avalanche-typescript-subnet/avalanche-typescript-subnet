@@ -5,6 +5,8 @@ package controller
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
 	"github.com/ava-labs/avalanchego/trace"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/storage"
 	"github.com/ava-labs/hypersdk/fees"
 )
@@ -47,4 +50,33 @@ func (c *Controller) GetContractBytecodeFromState(
 	acct codec.Address,
 ) ([]byte, error) {
 	return storage.GetContractBytecodeFromState(ctx, c.inner.ReadState, acct)
+}
+
+func (c *Controller) ExecuteContractOnState(
+	ctx context.Context,
+	contractAddress codec.Address,
+	payload []byte,
+	actor codec.Address,
+) (*runtime.JavyExecResult, error) {
+	bytecode, err := c.GetContractBytecodeFromState(ctx, contractAddress)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get contract bytecode: %w", err)
+	}
+	if bytecode == nil {
+		return nil, fmt.Errorf("contract %s has no bytecode", contractAddress)
+	}
+
+	provider := storage.GetContractStateProviderFromState(ctx, c.inner.ReadState, contractAddress)
+
+	params := runtime.JavyExecParams{ // FIXME:move limits to config
+		MaxFuel:       10 * 1000 * 1000,
+		MaxTime:       time.Millisecond * 10,
+		MaxMemory:     1024 * 1024 * 10,
+		Bytecode:      &bytecode,
+		StateProvider: provider,
+		Payload:       payload,
+		Actor:         actor[:],
+	}
+
+	return runtime.NewJavyExec().Execute(params)
 }
