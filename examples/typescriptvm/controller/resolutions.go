@@ -55,8 +55,8 @@ func (c *Controller) GetContractBytecodeFromState(
 func (c *Controller) ExecuteContractOnState(
 	ctx context.Context,
 	contractAddress codec.Address,
-	payload []byte,
 	actor codec.Address,
+	payload []byte,
 ) (*runtime.JavyExecResult, error) {
 	bytecode, err := c.GetContractBytecodeFromState(ctx, contractAddress)
 	if err != nil {

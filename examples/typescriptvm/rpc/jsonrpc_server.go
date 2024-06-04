@@ -4,6 +4,7 @@
 package rpc
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -106,4 +107,66 @@ func (j *JSONRPCServer) ContractBytecode(req *http.Request, args *ContractByteco
 	}
 	reply.Bytecode = bytecode
 	return err
+}
+
+type ExecuteContractArgs struct {
+	ContractAddress string `json:"contractAddress"`
+	Payload         []byte `json:"payload"`
+	Actor           string `json:"actor"`
+}
+
+type ExecuteContractReply struct {
+	DebugLog    string      `json:"debugLog"`
+	Result      []byte      `json:"result"`
+	Success     bool        `json:"success"`
+	Error       string      `json:"error"`
+	UpdatedKeys []FourBytes `json:"updatedKeys"`
+	ReadKeys    []FourBytes `json:"readKeys"`
+}
+
+func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContractArgs, reply *ExecuteContractReply) error {
+	ctx, span := j.c.Tracer().Start(req.Context(), "Server.ExecuteContract")
+	defer span.End()
+
+	contractAddr, err := codec.ParseAddressBech32(consts.HRP, args.ContractAddress)
+	if err != nil {
+		return err
+	}
+
+	actorAddr, err := codec.ParseAddressBech32(consts.HRP, args.Actor)
+	if err != nil {
+		return err
+	}
+
+	res, err := j.c.ExecuteContractOnState(ctx, contractAddr, actorAddr, args.Payload)
+	if err != nil {
+		return err
+	}
+
+	reply.DebugLog = string(res.DebugLog)
+	reply.Result = res.Result.Result
+	reply.Success = res.Result.Success
+	reply.Error = res.Result.Error
+
+	// Convert each [4]byte to FourBytes and assign to reply.ReadKeys
+	reply.ReadKeys = make([]FourBytes, len(res.Result.ReadKeys))
+	for i, key := range res.Result.ReadKeys {
+		reply.ReadKeys[i] = FourBytes(key)
+	}
+
+	reply.UpdatedKeys = make([]FourBytes, 0, len(res.Result.UpdatedKeys))
+	for key := range res.Result.UpdatedKeys {
+		reply.UpdatedKeys = append(reply.UpdatedKeys, FourBytes(key))
+	}
+
+	return nil
+}
+
+type FourBytes [4]byte
+
+func (b FourBytes) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b[:])
+}
+func (b *FourBytes) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, b[:])
 }

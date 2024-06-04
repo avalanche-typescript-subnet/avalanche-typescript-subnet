@@ -170,3 +170,18 @@ func (cli *JSONRPCClient) ContractBytecode(ctx context.Context, addr string) ([]
 	)
 	return resp.Bytecode, err
 }
+
+func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, input []byte, actor string) (ExecuteContractReply, error) {
+	resp := new(ExecuteContractReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"executeContract",
+		&ExecuteContractArgs{
+			ContractAddress: addr,
+			Payload:         input,
+			Actor:           actor,
+		},
+		resp,
+	)
+	return *resp, err
+}
