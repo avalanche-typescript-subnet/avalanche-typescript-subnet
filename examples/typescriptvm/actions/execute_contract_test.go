@@ -7,6 +7,7 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 	"github.com/ava-labs/hypersdk/state"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -78,16 +79,28 @@ func TestExecuteContractSerialization(t *testing.T) {
 				t.Fatalf("Marshal failed: %v", packer.Err())
 			}
 
+			n, err := buf.Write(packer.Bytes())
+			require.NoError(t, err)
+			require.Equal(t, len(packer.Bytes()), n)
+
 			unpacker := codec.NewReader(buf.Bytes(), len(buf.Bytes()))
 			unmarshalledAction, err := UnmarshalExecuteContract(unpacker)
-			if err != nil {
+			if tt.action.ContractAddress == codec.EmptyAddress {
+				assert.Error(t, err)
+				return
+			} else if err != nil {
 				t.Fatalf("Unmarshal failed: %v", err)
 			}
 
+			require.NotNil(t, unmarshalledAction)
 			unmarshalledEC := unmarshalledAction.(*ExecuteContract)
 
 			require.Equal(t, tt.action.ContractAddress, unmarshalledEC.ContractAddress, "ContractAddress mismatch")
-			require.Equal(t, tt.action.Payload, unmarshalledEC.Payload, "Payload mismatch")
+			if tt.action.Payload == nil {
+				require.Subset(t, [][]byte{tt.action.Payload, []byte{}}, [][]byte{unmarshalledEC.Payload}, "Payload mismatch")
+			} else {
+				require.Equal(t, tt.action.Payload, unmarshalledEC.Payload, "Payload mismatch")
+			}
 			require.Equal(t, len(tt.action.Keys), len(unmarshalledEC.Keys), "Keys length mismatch")
 			for k, v := range tt.action.Keys {
 				require.Equal(t, v, unmarshalledEC.Keys[k], "Permissions mismatch for key %v", k)
