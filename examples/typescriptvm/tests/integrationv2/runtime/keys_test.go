@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/tests/integrationv2/runtime/assets"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -22,7 +23,7 @@ func TestWriteKeys(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateprovider.StateProvider,
-		Payload:       []byte{CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
+		Payload:       []byte{assets.CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
 	}
 
 	res, err := exec.Execute(params)
@@ -61,7 +62,7 @@ func TestReadKeys(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateprovider.StateProvider,
-		Payload:       []byte{CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
+		Payload:       []byte{assets.CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
 	}
 
 	res, err := exec.Execute(params)
@@ -74,7 +75,7 @@ func TestReadKeys(t *testing.T) {
 	require.Equal(t, 0, len(res.Result.ReadKeys))
 
 	//read
-	params.Payload = []byte{CONTRACT_ACTION_READ_MANY_SLOTS, 4}
+	params.Payload = []byte{assets.CONTRACT_ACTION_READ_MANY_SLOTS, 4}
 	res, err = exec.Execute(params)
 	require.NoError(t, err)
 

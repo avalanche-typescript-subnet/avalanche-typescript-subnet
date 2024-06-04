@@ -1,4 +1,4 @@
-import { registerRawFunction, types, encoders } from "../../../../runtime/js_sdk"
+import { registerRawFunction, types, encoders } from "../../../../runtime/js_sdk/src"
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

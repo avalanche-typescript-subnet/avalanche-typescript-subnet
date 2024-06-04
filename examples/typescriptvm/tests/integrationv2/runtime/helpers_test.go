@@ -1,6 +1,7 @@
 package runtime_test
 
-//go:generate npx ../../../runtime/js_sdk test_assets/simpleCounter.ts
+//go:generate npx ../../../runtime/js_sdk assets/simple_counter.ts
+//go:generate cp assets/simple_counter.wasm ../actions/assets/simple_counter_copy.wasm
 
 import (
 	_ "embed"
@@ -9,14 +10,7 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 )
 
-const CONTRACT_ACTION_READ = 0
-const CONTRACT_ACTION_INCREMENT = 1
-const CONTRACT_ACTION_LOAD_CPU = 2
-const CONTRACT_ACTION_WRITE_MANY_SLOTS = 3
-const CONTRACT_ACTION_READ_MANY_SLOTS = 4
-const CONTRACT_ACTION_ECHO = 5
-
-//go:embed test_assets/simpleCounter.wasm
+//go:embed assets/simple_counter.wasm
 var testWasmBytes []byte
 
 func createActorAddress(actorNumber uint) []byte {
