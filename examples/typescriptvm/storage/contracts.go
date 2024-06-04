@@ -73,7 +73,7 @@ func GetContractBytecodeFromState(
 	return values[0], errs[0]
 }
 
-func ContractStateKey(contractAddr codec.Address, postfix [4]byte) []byte {
+func ContractStateKey(contractAddr codec.Address, postfix runtime.KeyPostfix) []byte {
 	return append(append([]byte{contractStatePrefix}, contractAddr[:]...), postfix[:]...)
 }
 
@@ -82,7 +82,7 @@ func GetContractStateProviderFromState(
 	f ReadState,
 	addr codec.Address,
 ) runtime.StateProvider {
-	return func(postfix [4]byte) ([]byte, error) { //FIXME: would be more efficient to batch get all state keys
+	return func(postfix runtime.KeyPostfix) ([]byte, error) { //FIXME: would be more efficient to batch get all state keys
 		k := ContractStateKey(addr, postfix)
 		values, errs := f(ctx, [][]byte{k})
 
@@ -92,4 +92,48 @@ func GetContractStateProviderFromState(
 		}
 		return values[0], errs[0]
 	}
+}
+
+func GetContractBytecode(
+	ctx context.Context,
+	im state.Immutable,
+	contractAddress codec.Address,
+) ([]byte, error) {
+	bytecodeKey := ContractBytecodeKey(contractAddress)
+
+	val, err := im.GetValue(ctx, bytecodeKey)
+	if err != nil {
+		return nil, err //proxy not found error
+	}
+	return val, nil
+}
+
+func GetContractStateValue(
+	ctx context.Context,
+	im state.Immutable,
+	contractAddress codec.Address,
+	postfix runtime.KeyPostfix,
+) ([]byte, error) {
+	k := ContractStateKey(contractAddress, postfix)
+	val, err := im.GetValue(ctx, k)
+	if errors.Is(err, database.ErrNotFound) {
+		return nil, nil
+	}
+	return val, err
+}
+
+func UpdateContractStateFields(
+	ctx context.Context,
+	mu state.Mutable,
+	contractAddress codec.Address,
+	fields map[runtime.KeyPostfix][]byte,
+) error {
+	for key, val := range fields {
+		k := ContractStateKey(contractAddress, key)
+		err := mu.Insert(ctx, k, val)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

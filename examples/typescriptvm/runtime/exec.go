@@ -39,7 +39,7 @@ func NewJavyExec() *JavyExec {
 }
 
 func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
-	var state map[[4]byte][]byte = make(map[[4]byte][]byte)
+	var state map[KeyPostfix][]byte = make(map[KeyPostfix][]byte)
 
 	for i := 0; i < 100; i++ { //curcuit breaker
 		res, err := exec.executeOnState(params, state)
@@ -50,7 +50,7 @@ func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 		if strings.Contains(res.Result.Error, "NO_VALUE_AT_ADDRESS") {
 			addrHex := strings.Split(res.Result.Error, "\"")[1]
 
-			var address [4]byte
+			var address KeyPostfix
 			// Remove the "0x" prefix if present
 			cleanedAddrHex := strings.TrimPrefix(addrHex, "0x")
 			value, err := strconv.ParseUint(cleanedAddrHex, 16, 32)
@@ -72,7 +72,7 @@ func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 	return nil, fmt.Errorf("execution failed after 100 attempts")
 }
 
-func (exec *JavyExec) executeOnState(params JavyExecParams, state map[[4]byte][]byte) (*JavyExecResult, error) {
+func (exec *JavyExec) executeOnState(params JavyExecParams, state map[KeyPostfix][]byte) (*JavyExecResult, error) {
 	store, mainFunc, err := exec.createStore(params.Bytecode)
 	if err != nil {
 		return nil, err

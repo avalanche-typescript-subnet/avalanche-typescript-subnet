@@ -4,7 +4,6 @@
 package rpc
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -12,6 +11,7 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 	"github.com/ava-labs/hypersdk/fees"
 )
 
@@ -116,12 +116,12 @@ type ExecuteContractArgs struct {
 }
 
 type ExecuteContractReply struct {
-	DebugLog    string      `json:"debugLog"`
-	Result      []byte      `json:"result"`
-	Success     bool        `json:"success"`
-	Error       string      `json:"error"`
-	UpdatedKeys []FourBytes `json:"updatedKeys"`
-	ReadKeys    []FourBytes `json:"readKeys"`
+	DebugLog    string               `json:"debugLog"`
+	Result      []byte               `json:"result"`
+	Success     bool                 `json:"success"`
+	Error       string               `json:"error"`
+	UpdatedKeys []runtime.KeyPostfix `json:"updatedKeys"`
+	ReadKeys    []runtime.KeyPostfix `json:"readKeys"`
 }
 
 func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContractArgs, reply *ExecuteContractReply) error {
@@ -148,25 +148,16 @@ func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContract
 	reply.Success = res.Result.Success
 	reply.Error = res.Result.Error
 
-	// Convert each [4]byte to FourBytes and assign to reply.ReadKeys
-	reply.ReadKeys = make([]FourBytes, len(res.Result.ReadKeys))
+	// Convert each [4]byte to KeyPostfix and assign to reply.ReadKeys
+	reply.ReadKeys = make([]runtime.KeyPostfix, len(res.Result.ReadKeys))
 	for i, key := range res.Result.ReadKeys {
-		reply.ReadKeys[i] = FourBytes(key)
+		reply.ReadKeys[i] = runtime.KeyPostfix(key)
 	}
 
-	reply.UpdatedKeys = make([]FourBytes, 0, len(res.Result.UpdatedKeys))
+	reply.UpdatedKeys = make([]runtime.KeyPostfix, 0, len(res.Result.UpdatedKeys))
 	for key := range res.Result.UpdatedKeys {
-		reply.UpdatedKeys = append(reply.UpdatedKeys, FourBytes(key))
+		reply.UpdatedKeys = append(reply.UpdatedKeys, runtime.KeyPostfix(key))
 	}
 
 	return nil
-}
-
-type FourBytes [4]byte
-
-func (b FourBytes) MarshalJSON() ([]byte, error) {
-	return json.Marshal(b[:])
-}
-func (b *FourBytes) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, b[:])
 }

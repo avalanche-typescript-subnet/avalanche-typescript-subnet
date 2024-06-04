@@ -1,0 +1,172 @@
+package actions
+
+import (
+	"context"
+	"encoding/binary"
+	"fmt"
+	"time"
+
+	"github.com/ava-labs/avalanchego/ids"
+
+	"github.com/ava-labs/hypersdk/chain"
+	"github.com/ava-labs/hypersdk/codec"
+	"github.com/ava-labs/hypersdk/state"
+
+	mconsts "github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/storage"
+)
+
+var _ chain.Action = (*ExecuteContract)(nil)
+
+type ExecuteContract struct {
+	ContractAddress   codec.Address                            `json:"contractAddress"`
+	Payload           []byte                                   `json:"payload"`
+	Keys              map[runtime.KeyPostfix]state.Permissions `json:"stateKeys"`
+	computeUnitsSpent uint64
+}
+
+func (*ExecuteContract) GetTypeID() uint8 {
+	return mconsts.ExecuteContractID
+}
+
+func (ec *ExecuteContract) StateKeys(actor codec.Address, _ ids.ID) state.Keys {
+	keys := make(state.Keys, len(ec.Keys))
+	for k, v := range ec.Keys {
+		keys[string(storage.ContractStateKey(ec.ContractAddress, k))] = v
+	}
+	return keys
+}
+
+// FIXME: This code was copied from hypersdk/examples/morpheusvm/actions/evm_call.go in the evm-call-experiment branch. It needs testing.
+func (ec *ExecuteContract) StateKeysMaxChunks() []uint16 {
+	output := make([]uint16, 0, len(ec.Keys))
+	for k := range ec.Keys {
+		maxChunks := binary.BigEndian.Uint16(k[:len(k)-2])
+		output = append(output, maxChunks)
+	}
+	return output
+}
+
+func (ec *ExecuteContract) Execute(
+	ctx context.Context,
+	_ chain.Rules,
+	mu state.Mutable,
+	_ int64,
+	actor codec.Address,
+	_ ids.ID,
+) ([][]byte, error) {
+	bytecode, err := storage.GetContractBytecode(ctx, mu, ec.ContractAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	precachedValues := make(map[runtime.KeyPostfix][]byte)
+	for keyPostfix, permissions := range ec.Keys {
+		if permissions&state.Read == 0 {
+			continue
+		}
+
+		val, err := storage.GetContractStateValue(ctx, mu, ec.ContractAddress, keyPostfix)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get contract state value: %w", err)
+		}
+		precachedValues[keyPostfix] = val
+	}
+
+	var fixedStateProvider runtime.StateProvider = func(key runtime.KeyPostfix) ([]byte, error) {
+		postfix := runtime.KeyPostfix{}
+		copy(postfix[:], key[len(key)-runtime.KEY_POSTFIX_LENGTH:])
+		return precachedValues[postfix], nil
+	}
+
+	params := runtime.JavyExecParams{ // FIXME:move limits to config
+		MaxFuel:       10 * 1000 * 1000,
+		MaxTime:       time.Millisecond * 10,
+		MaxMemory:     1024 * 1024 * 10,
+		Bytecode:      &bytecode,
+		StateProvider: fixedStateProvider,
+		Payload:       ec.Payload,
+		Actor:         actor[:],
+	}
+
+	res, err := runtime.NewJavyExec().Execute(params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute contract: %w", err)
+	}
+
+	if res.Result.Success != true {
+		return nil, fmt.Errorf("contract execution failed: %s", res.Result.Error)
+	}
+
+	err = storage.UpdateContractStateFields(ctx, mu, ec.ContractAddress, res.Result.UpdatedKeys)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update contract state: %w", err)
+	}
+
+	ec.computeUnitsSpent = res.FuelConsumed / 1_000_000 // TODO: move to consts
+	ec.computeUnitsSpent = max(ExecuteContractMinComputeUnits, ec.computeUnitsSpent)
+
+	return [][]byte{res.Result.Result}, nil
+}
+
+func (ec *ExecuteContract) ComputeUnits(chain.Rules) uint64 {
+	if ec.computeUnitsSpent == 0 {
+		// FIXME: remove temporary guardrails after we have a better way to handle this
+		if ExecuteContractMinComputeUnits == 0 {
+			panic("ExecuteContractMinComputeUnits is set to 0, which is unacceptable. Ensure it is at least 1.")
+		}
+		panic("computeUnitsSpent is 0, which should never occur. ComputeUnits is expected to be called after Execute.")
+	}
+	return ec.computeUnitsSpent
+}
+
+func (ec *ExecuteContract) Size() int {
+	return len(ec.ContractAddress) + len(ec.Payload) + len(ec.Keys)*(4+1)
+}
+
+func (ec *ExecuteContract) Marshal(p *codec.Packer) {
+	p.PackAddress(ec.ContractAddress)
+	p.PackBytes(ec.Payload)
+	marshalKeys(ec.Keys, p)
+}
+
+func UnmarshalExecuteContract(p *codec.Packer) (chain.Action, error) {
+	var executeContract ExecuteContract
+
+	p.UnpackAddress(&executeContract.ContractAddress)
+	p.UnpackBytes(-1, false, &executeContract.Payload)
+
+	var err error
+	executeContract.Keys, err = unmarshalKeys(p)
+	if err != nil {
+		return nil, err
+	}
+	return &executeContract, nil
+}
+
+func (*ExecuteContract) ValidRange(chain.Rules) (int64, int64) {
+	// Returning -1, -1 means that the action is always valid.
+	return -1, -1
+}
+func marshalKeys(keys map[runtime.KeyPostfix]state.Permissions, p *codec.Packer) {
+	p.PackInt(len(keys))
+	for k, v := range keys {
+		p.PackFixedBytes(k[:]) // Serialize the 4-byte KeyPostfix
+		p.PackByte(byte(v))    // Serialize the permissions associated with the key
+	}
+}
+
+func unmarshalKeys(p *codec.Packer) (map[runtime.KeyPostfix]state.Permissions, error) {
+	numKeys := p.UnpackInt(false)
+	keys := make(map[runtime.KeyPostfix]state.Permissions, numKeys)
+	for i := 0; i < numKeys; i++ {
+		var keyPostfix runtime.KeyPostfix
+		keyBytes := make([]byte, runtime.KEY_POSTFIX_LENGTH)
+		p.UnpackFixedBytes(int(runtime.KEY_POSTFIX_LENGTH), &keyBytes) // Deserialize the 4-byte KeyPostfix
+		copy(keyPostfix[:], keyBytes)
+		perm := state.Permissions(p.UnpackByte())
+		keys[keyPostfix] = perm
+	}
+	return keys, p.Err()
+}

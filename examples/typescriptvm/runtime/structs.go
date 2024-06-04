@@ -7,14 +7,14 @@ import (
 )
 
 type ResultJSON struct {
-	Result      []byte             `json:"result"`
-	Success     bool               `json:"success"`
-	UpdatedKeys map[[4]byte][]byte `json:"updatedKeys"`
-	ReadKeys    [][4]byte          `json:"readKeys"`
-	Error       string             `json:"error"`
+	Result      []byte                `json:"result"`
+	Success     bool                  `json:"success"`
+	UpdatedKeys map[KeyPostfix][]byte `json:"updatedKeys"`
+	ReadKeys    []KeyPostfix          `json:"readKeys"`
+	Error       string                `json:"error"`
 }
 
-type StateProvider func([4]byte) ([]byte, error)
+type StateProvider func(KeyPostfix) ([]byte, error)
 
 type JavyExecParams struct {
 	MaxFuel       uint64
@@ -27,23 +27,23 @@ type JavyExecParams struct {
 }
 
 type JSPayload struct {
-	CurrentState map[[4]byte][]byte `json:"currentState"`
-	Payload      []byte             `json:"payload"`
-	Actor        []byte             `json:"actor"`
+	CurrentState map[KeyPostfix][]byte `json:"currentState"`
+	Payload      []byte                `json:"payload"`
+	Actor        []byte                `json:"actor"`
 }
 
-// Convert [4]byte to base64 string
-func byteArrayToBase64String(arr [4]byte) string {
+// Convert KeyPostfix to base64 string
+func byteArrayToBase64String(arr KeyPostfix) string {
 	return base64.StdEncoding.EncodeToString(arr[:])
 }
 
-// Convert base64 string to [4]byte
-func base64StringToByteArray(str string) ([4]byte, error) {
+// Convert base64 string to KeyPostfix
+func base64StringToByteArray(str string) (KeyPostfix, error) {
 	bytes, err := base64.StdEncoding.DecodeString(str)
 	if err != nil {
-		return [4]byte{}, err
+		return KeyPostfix{}, err
 	}
-	var arr [4]byte
+	var arr KeyPostfix
 	copy(arr[:], bytes)
 	return arr, nil
 }
@@ -96,7 +96,7 @@ func (r *ResultJSON) UnmarshalJSON(data []byte) error {
 	r.Success = aux.Success
 	r.Error = aux.Error
 
-	updatedKeys := make(map[[4]byte][]byte)
+	updatedKeys := make(map[KeyPostfix][]byte)
 	for k, v := range aux.UpdatedKeys {
 		key, err := base64StringToByteArray(k)
 		if err != nil {
@@ -110,7 +110,7 @@ func (r *ResultJSON) UnmarshalJSON(data []byte) error {
 	}
 	r.UpdatedKeys = updatedKeys
 
-	readKeys := make([][4]byte, len(aux.ReadKeys))
+	readKeys := make([]KeyPostfix, len(aux.ReadKeys))
 	for i, key := range aux.ReadKeys {
 		readKey, err := base64StringToByteArray(key)
 		if err != nil {
@@ -152,7 +152,7 @@ func (j *JSPayload) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	currentState := make(map[[4]byte][]byte)
+	currentState := make(map[KeyPostfix][]byte)
 	for k, v := range aux.CurrentState {
 		key, err := base64StringToByteArray(k)
 		if err != nil {
@@ -179,4 +179,15 @@ func (j *JSPayload) UnmarshalJSON(data []byte) error {
 	j.Actor = actor
 
 	return nil
+}
+
+const KEY_POSTFIX_LENGTH = 4
+
+type KeyPostfix [KEY_POSTFIX_LENGTH]byte
+
+func (b KeyPostfix) MarshalJSON() ([]byte, error) {
+	return json.Marshal(b[:])
+}
+func (b *KeyPostfix) UnmarshalJSON(data []byte) error {
+	return json.Unmarshal(data, b[:])
 }
