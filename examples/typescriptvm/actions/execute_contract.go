@@ -127,21 +127,26 @@ func (ec *ExecuteContract) Size() int {
 
 func (ec *ExecuteContract) Marshal(p *codec.Packer) {
 	p.PackAddress(ec.ContractAddress)
-	p.PackBytes(ec.Payload)
+	packBytesOrNull(p, ec.Payload)
 	marshalKeys(ec.Keys, p)
 }
 
 func UnmarshalExecuteContract(p *codec.Packer) (chain.Action, error) {
+	var err error
+
 	var executeContract ExecuteContract
 
 	p.UnpackAddress(&executeContract.ContractAddress)
-	p.UnpackBytes(-1, false, &executeContract.Payload)
+	err = unmarshalBytesOrNull(p, &executeContract.Payload)
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
 	executeContract.Keys, err = unmarshalKeys(p)
 	if err != nil {
 		return nil, err
 	}
+
 	return &executeContract, nil
 }
 
@@ -169,4 +174,22 @@ func unmarshalKeys(p *codec.Packer) (map[runtime.KeyPostfix]state.Permissions, e
 		keys[keyPostfix] = perm
 	}
 	return keys, p.Err()
+}
+
+func packBytesOrNull(p *codec.Packer, b []byte) {
+	flag := b != nil
+	p.PackBool(flag)
+	if flag {
+		p.PackBytes(b)
+	}
+}
+
+func unmarshalBytesOrNull(p *codec.Packer, field *[]byte) error {
+	flag := p.UnpackBool()
+	if flag {
+		p.UnpackBytes(-1, false, field)
+	} else {
+		*field = nil
+	}
+	return p.Err()
 }
