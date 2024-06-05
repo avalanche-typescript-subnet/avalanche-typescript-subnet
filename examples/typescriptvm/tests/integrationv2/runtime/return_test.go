@@ -13,7 +13,7 @@ import (
 
 func TestReturn(t *testing.T) {
 	exec := runtime.NewJavyExec()
-	stateProvider := &DummyStateProvider{State: map[[4]byte][]byte{}}
+	stateProvider := &DummyStateProvider{State: map[runtime.KeyPostfix][]byte{}}
 
 	actor1Bytes := createActorAddress(1)
 	actor2Bytes := createActorAddress(2)

@@ -14,7 +14,7 @@ import (
 func TestWriteKeys(t *testing.T) {
 	exec := runtime.NewJavyExec()
 	stateprovider := &DummyStateProvider{
-		State: map[[4]byte][]byte{},
+		State: map[runtime.KeyPostfix][]byte{},
 	}
 
 	params := runtime.JavyExecParams{
@@ -38,7 +38,7 @@ func TestWriteKeys(t *testing.T) {
 	require.Equal(t, 0, len(res.Result.ReadKeys))
 
 	//check write keys
-	expectedWriteKeys := map[[4]byte][]byte{
+	expectedWriteKeys := map[runtime.KeyPostfix][]byte{
 		{0, 1, 0, 6}: {1, 1, 1}, //starting with slot 1, size is fixed to 6
 		{0, 2, 0, 6}: {2, 2, 2},
 		{0, 3, 0, 6}: {3, 3, 3},
@@ -53,7 +53,7 @@ func TestWriteKeys(t *testing.T) {
 func TestReadKeys(t *testing.T) {
 	exec := runtime.NewJavyExec()
 	stateprovider := &DummyStateProvider{
-		State: map[[4]byte][]byte{},
+		State: map[runtime.KeyPostfix][]byte{},
 	}
 
 	params := runtime.JavyExecParams{
@@ -80,7 +80,7 @@ func TestReadKeys(t *testing.T) {
 	require.NoError(t, err)
 
 	require.Equal(t, 4, len(res.Result.ReadKeys))
-	expectedReadKeys := [][4]byte{
+	expectedReadKeys := []runtime.KeyPostfix{
 		{0, 1, 0, 6},
 		{0, 2, 0, 6},
 		{0, 3, 0, 6},

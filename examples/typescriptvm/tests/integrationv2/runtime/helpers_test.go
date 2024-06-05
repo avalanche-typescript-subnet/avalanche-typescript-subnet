@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/ava-labs/hypersdk/codec"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 )
 
 //go:embed assets/simple_counter.wasm
@@ -21,10 +22,10 @@ func createActorAddress(actorNumber uint) []byte {
 }
 
 type DummyStateProvider struct {
-	State map[[4]byte][]byte
+	State map[runtime.KeyPostfix][]byte
 }
 
-func (d *DummyStateProvider) StateProvider(key [4]byte) ([]byte, error) {
+func (d *DummyStateProvider) StateProvider(key runtime.KeyPostfix) ([]byte, error) {
 	value, exists := d.State[key]
 	if !exists {
 		return []byte{}, nil
@@ -32,7 +33,7 @@ func (d *DummyStateProvider) StateProvider(key [4]byte) ([]byte, error) {
 	return value, nil
 }
 
-func (d *DummyStateProvider) SetState(key [4]byte, value []byte) {
+func (d *DummyStateProvider) SetState(key runtime.KeyPostfix, value []byte) {
 	d.State[key] = value
 	d.Print()
 }
