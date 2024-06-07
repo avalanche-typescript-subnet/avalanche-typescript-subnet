@@ -35,7 +35,9 @@ registerRawFunction((payload: Uint8Array, actor: Uint8Array, getRawValue: types.
                 : `No balance for ${actorString.slice(0, 4)}..., but here are balances: ${Object.keys(dataAtSlotZero).map(key => `${key.slice(0, 4)}...: ${dataAtSlotZero[key]}`).join(', ')}`
             )
 
-            return encoder.encode(JSON.stringify(dataAtSlotZero[actorString] || 0));
+            const toReturn = dataAtSlotZero[actorString] || 0
+            console.log(`Returning: ${toReturn}`)
+            return encoder.encode(JSON.stringify(toReturn));
         case CONTRACT_ACTION_INCREMENT:
             console.log(`CONTRACT_ACTION_INCREMENT value=${value}`)
 
