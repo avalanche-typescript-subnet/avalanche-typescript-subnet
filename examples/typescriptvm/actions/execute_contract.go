@@ -20,10 +20,10 @@ import (
 var _ chain.Action = (*ExecuteContract)(nil)
 
 type ExecuteContract struct {
-	ContractAddress   codec.Address                            `json:"contractAddress"`
-	Payload           []byte                                   `json:"payload"`
-	Keys              map[runtime.KeyPostfix]state.Permissions `json:"stateKeys"`
-	computeUnitsSpent uint64
+	ContractAddress     codec.Address                            `json:"contractAddress"`
+	Payload             []byte                                   `json:"payload"`
+	Keys                map[runtime.KeyPostfix]state.Permissions `json:"stateKeys"`
+	ComputeUnitsToSpend uint64                                   `json:"computeUnitsToSpend"`
 }
 
 func (*ExecuteContract) GetTypeID() uint8 {
@@ -35,6 +35,13 @@ func (ec *ExecuteContract) StateKeys(actor codec.Address, _ ids.ID) state.Keys {
 	for k, v := range ec.Keys {
 		keys[string(storage.ContractStateKey(ec.ContractAddress, k))] = v
 	}
+	keys[string(storage.ContractBytecodeKey(ec.ContractAddress))] = state.Read
+
+	//debug
+	for k, v := range keys {
+		fmt.Printf("StateKeys: key: %x, val: %d\n", []byte(k), v)
+	}
+
 	return keys
 }
 
@@ -104,21 +111,19 @@ func (ec *ExecuteContract) Execute(
 		return nil, fmt.Errorf("failed to update contract state: %w", err)
 	}
 
-	ec.computeUnitsSpent = res.FuelConsumed / 1_000_000 // TODO: move to consts
-	ec.computeUnitsSpent = max(ExecuteContractMinComputeUnits, ec.computeUnitsSpent)
+	computeUnitsSpent := res.FuelConsumed / 1_000_000 // TODO: move to consts
+	computeUnitsSpent = max(ExecuteContractMinComputeUnits, computeUnitsSpent)
+
+	if computeUnitsSpent != ec.ComputeUnitsToSpend {
+		return nil, fmt.Errorf("compute units spent (%d) does not equal the compute units to spend (%d)", computeUnitsSpent, ec.ComputeUnitsToSpend)
+	}
 
 	return [][]byte{res.Result.Result}, nil
+
 }
 
 func (ec *ExecuteContract) ComputeUnits(chain.Rules) uint64 {
-	if ec.computeUnitsSpent == 0 {
-		// FIXME: remove temporary guardrails after we have a better way to handle this
-		if ExecuteContractMinComputeUnits == 0 {
-			panic("ExecuteContractMinComputeUnits is set to 0, which is unacceptable. Ensure it is at least 1.")
-		}
-		panic("computeUnitsSpent is 0, which should never occur. ComputeUnits is expected to be called after Execute.")
-	}
-	return ec.computeUnitsSpent
+	return ec.ComputeUnitsToSpend
 }
 
 func (ec *ExecuteContract) Size() int {
@@ -129,6 +134,7 @@ func (ec *ExecuteContract) Marshal(p *codec.Packer) {
 	p.PackAddress(ec.ContractAddress)
 	packBytesOrNull(p, ec.Payload)
 	marshalKeys(ec.Keys, p)
+	p.PackUint64(ec.ComputeUnitsToSpend)
 }
 
 func UnmarshalExecuteContract(p *codec.Packer) (chain.Action, error) {
@@ -146,6 +152,8 @@ func UnmarshalExecuteContract(p *codec.Packer) (chain.Action, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	executeContract.ComputeUnitsToSpend = p.UnpackUint64(false)
 
 	return &executeContract, nil
 }

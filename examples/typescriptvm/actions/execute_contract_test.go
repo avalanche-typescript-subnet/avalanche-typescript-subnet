@@ -21,34 +21,47 @@ func TestExecuteContractSerialization(t *testing.T) {
 		{
 			name: "Empty address (error expected)",
 			action: ExecuteContract{
-				ContractAddress: codec.EmptyAddress,
-				Payload:         nil,
-				Keys:            nil,
+				ContractAddress:     codec.EmptyAddress,
+				Payload:             nil,
+				Keys:                nil,
+				ComputeUnitsToSpend: 0,
 			},
 			errorExpected: true,
 		},
 		{
 			name: "Only contract address",
 			action: ExecuteContract{
-				ContractAddress: testAddress,
-				Payload:         nil,
-				Keys:            nil,
+				ContractAddress:     testAddress,
+				Payload:             nil,
+				Keys:                nil,
+				ComputeUnitsToSpend: 0,
 			},
 		},
 		{
 			name: "Payload",
 			action: ExecuteContract{
-				ContractAddress: testAddress,
-				Payload:         []byte("payload"),
-				Keys:            nil,
+				ContractAddress:     testAddress,
+				Payload:             []byte("payload"),
+				Keys:                nil,
+				ComputeUnitsToSpend: 0,
 			},
 		},
 		{
 			name: "Empty payload",
 			action: ExecuteContract{
-				ContractAddress: testAddress,
-				Payload:         []byte{},
-				Keys:            nil,
+				ContractAddress:     testAddress,
+				Payload:             []byte{},
+				Keys:                nil,
+				ComputeUnitsToSpend: 0,
+			},
+		},
+		{
+			name: "Compute units",
+			action: ExecuteContract{
+				ContractAddress:     testAddress,
+				Payload:             nil,
+				Keys:                nil,
+				ComputeUnitsToSpend: 123456,
 			},
 		},
 		{
@@ -59,6 +72,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 				Keys: map[runtime.KeyPostfix]state.Permissions{
 					{0x01, 0x02, 0x03, 0x04}: state.Read,
 				},
+				ComputeUnitsToSpend: 0,
 			},
 		},
 		{
@@ -72,6 +86,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 					{0x09, 0x0a, 0x0b, 0x0c}: state.Allocate,
 					{0x0d, 0x0e, 0x0f, 0x10}: state.All,
 				},
+				ComputeUnitsToSpend: 999888777,
 			},
 		},
 	}
@@ -105,6 +120,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 			require.Equal(t, tt.action.ContractAddress, unmarshalledEC.ContractAddress, "ContractAddress mismatch")
 			require.Equal(t, tt.action.Payload, unmarshalledEC.Payload, "Payload mismatch")
 			require.Equal(t, len(tt.action.Keys), len(unmarshalledEC.Keys), "Keys length mismatch")
+			require.Equal(t, tt.action.ComputeUnitsToSpend, unmarshalledEC.ComputeUnitsToSpend, "ComputeUnitsToSpend mismatch")
 
 			for k, v := range tt.action.Keys {
 				require.Equal(t, v, unmarshalledEC.Keys[k], "Permissions mismatch for key %v", k)
