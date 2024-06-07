@@ -10,6 +10,8 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 
 	_ "github.com/ava-labs/hypersdk/examples/typescriptvm/registry" // ensure registry populated
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
+	"github.com/ava-labs/hypersdk/state"
 
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
@@ -171,8 +173,17 @@ func (cli *JSONRPCClient) ContractBytecode(ctx context.Context, addr string) ([]
 	return resp.Bytecode, err
 }
 
-func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, input []byte, actor string) (ExecuteContractReply, error) {
-	resp := new(ExecuteContractReply)
+type ExecuteContractClientReply struct {
+	DebugLog          string
+	Result            []byte
+	Success           bool
+	Error             string
+	Keys              map[runtime.KeyPostfix]state.Permissions
+	ComputeUnitsSpent uint64
+}
+
+func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, input []byte, actor string) (ExecuteContractClientReply, error) {
+	originalResp := new(ExecuteContractReply)
 	err := cli.requester.SendRequest(
 		ctx,
 		"executeContract",
@@ -181,7 +192,28 @@ func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, inpu
 			Payload:         input,
 			Actor:           actor,
 		},
-		resp,
+		originalResp,
 	)
+
+	resp := new(ExecuteContractClientReply)
+	resp.DebugLog = originalResp.DebugLog
+	resp.Result = originalResp.Result
+	resp.Success = originalResp.Success
+	resp.Error = originalResp.Error
+	resp.ComputeUnitsSpent = originalResp.ComputeUnitsSpent
+
+	resp.Keys = make(map[runtime.KeyPostfix]state.Permissions)
+
+	for _, key := range originalResp.ReadKeys {
+		resp.Keys[key] = state.Read
+	}
+	for _, key := range originalResp.UpdatedKeys {
+		if _, hadRead := (resp.Keys)[key]; !hadRead {
+			resp.Keys[key] = state.Write | state.Allocate
+		} else {
+			resp.Keys[key] = state.Write | state.Allocate | state.Read
+		}
+	}
+
 	return *resp, err
 }

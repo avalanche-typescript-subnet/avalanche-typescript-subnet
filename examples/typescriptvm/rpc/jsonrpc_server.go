@@ -9,6 +9,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 
 	"github.com/ava-labs/hypersdk/codec"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
 	"github.com/ava-labs/hypersdk/fees"
@@ -115,12 +116,13 @@ type ExecuteContractArgs struct {
 }
 
 type ExecuteContractReply struct {
-	DebugLog    string    `json:"debugLog"`
-	Result      []byte    `json:"result"`
-	Success     bool      `json:"success"`
-	Error       string    `json:"error"`
-	UpdatedKeys [][4]byte `json:"updatedKeys"`
-	ReadKeys    [][4]byte `json:"readKeys"`
+	DebugLog          string    `json:"debugLog"`
+	Result            []byte    `json:"result"`
+	Success           bool      `json:"success"`
+	Error             string    `json:"error"`
+	UpdatedKeys       [][4]byte `json:"updatedKeys"`
+	ReadKeys          [][4]byte `json:"readKeys"`
+	ComputeUnitsSpent uint64    `json:"computeUnitsSpent"`
 }
 
 func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContractArgs, reply *ExecuteContractReply) error {
@@ -157,6 +159,9 @@ func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContract
 	for key := range res.Result.UpdatedKeys {
 		reply.UpdatedKeys = append(reply.UpdatedKeys, [4]byte(key))
 	}
+
+	reply.ComputeUnitsSpent = res.FuelConsumed / 1_000_000 // TODO: move to consts
+	reply.ComputeUnitsSpent = max(actions.ExecuteContractMinComputeUnits, reply.ComputeUnitsSpent)
 
 	return nil
 }

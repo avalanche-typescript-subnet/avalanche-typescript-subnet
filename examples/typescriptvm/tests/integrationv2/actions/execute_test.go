@@ -9,9 +9,7 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
 	lconsts "github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/tests/integrationv2/runtime/assets"
-	"github.com/ava-labs/hypersdk/state"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,7 +27,7 @@ func TestRPCEcho(t *testing.T) {
 	require.Equal(t, []byte("70"), callResult.Result)
 }
 
-func TestExecuteIncrement(t *testing.T) {
+func TestExecuteIncrementManualKeys(t *testing.T) {
 	prep := prepare(t)
 
 	contractAddrString := deployTestContractHelper(t, prep)
@@ -41,18 +39,22 @@ func TestExecuteIncrement(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, []byte("0"), callResult.Result)
 
+	//execute increment only to figure out keys
+	incrementPayload := []byte{assets.CONTRACT_ACTION_INCREMENT, 0x7}
+	callResult, err = prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, incrementPayload, prep.addrStr)
+	require.NoError(t, err)
+
+	//now execute increment in transaction
 	parser, err := prep.instance.lcli.Parser(context.Background())
 	require.NoError(t, err)
 	submit, _, _, err := prep.instance.cli.GenerateTransaction(
 		context.Background(),
 		parser,
 		[]chain.Action{&actions.ExecuteContract{
-			ContractAddress: contractAddr,
-			Payload:         []byte{assets.CONTRACT_ACTION_INCREMENT, 0x7},
-			Keys: map[runtime.KeyPostfix]state.Permissions{
-				runtime.KeyPostfix([]byte{0, 0, 0, 0xa}): state.All,
-			},
-			ComputeUnitsToSpend: 4,
+			ContractAddress:     contractAddr,
+			Payload:             incrementPayload,
+			Keys:                callResult.Keys,
+			ComputeUnitsToSpend: callResult.ComputeUnitsSpent,
 		}},
 		prep.factory,
 	)
