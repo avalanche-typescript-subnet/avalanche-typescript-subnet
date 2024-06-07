@@ -71,17 +71,6 @@ func (r *Response) setError(err error) {
 	r.Error = err.Error()
 }
 
-func (r *Response) setTxID(id string) {
-	r.Result.ID = id
-}
-
-func (r *Response) getTxID() (string, bool) {
-	if r.Result.ID == "" {
-		return "", false
-	}
-	return r.Result.ID, true
-}
-
 func (r *Response) setBalance(balance uint64) {
 	r.Result.Balance = balance
 }
@@ -115,7 +104,7 @@ type Parameter struct {
 	// The type of the parameter. (required)
 	Type Type `json:"type"`
 	// The value of the parameter. (required)
-	Value interface{} `json:"value"`
+	Value []byte `json:"value"`
 }
 
 type Type string
