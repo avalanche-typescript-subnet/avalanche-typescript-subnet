@@ -166,15 +166,15 @@ func (*ExecuteContract) ValidRange(chain.Rules) (int64, int64) {
 }
 func marshalKeys(keys map[runtime.KeyPostfix]state.Permissions, p *codec.Packer) {
 	p.PackInt(len(keys))
-	keysOrdred := make([]runtime.KeyPostfix, 0, len(keys))
+	keysOrdered := make([]runtime.KeyPostfix, 0, len(keys))
 	for k := range keys {
-		keysOrdred = append(keysOrdred, k)
+		keysOrdered = append(keysOrdered, k)
 	}
-	sort.Slice(keysOrdred, func(i, j int) bool {
-		return bytes.Compare(keysOrdred[i][:], keysOrdred[j][:]) < 0
+	sort.Slice(keysOrdered, func(i, j int) bool {
+		return bytes.Compare(keysOrdered[i][:], keysOrdered[j][:]) < 0
 	})
 
-	for _, k := range keysOrdred { // Iterate over the keys in sorted order
+	for _, k := range keysOrdered { // Iterate over the keys in sorted order
 		p.PackFixedBytes(k[:])    // Serialize the 4-byte KeyPostfix
 		p.PackByte(byte(keys[k])) // Serialize the permissions associated with the key
 	}
