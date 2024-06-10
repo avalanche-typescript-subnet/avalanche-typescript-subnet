@@ -73,8 +73,8 @@ func Default() *Genesis {
 		// Chain Fee Parameters
 		MinUnitPrice:               fees.Dimensions{100, 100, 100, 100, 100},
 		UnitPriceChangeDenominator: fees.Dimensions{48, 48, 48, 48, 48},
-		WindowTargetUnits:          fees.Dimensions{20_000_000, 1_000, 1_000, 1_000, 1_000},
-		MaxBlockUnits:              fees.Dimensions{1_800_000, 2_000, 2_000, 2_000, 2_000},
+		WindowTargetUnits:          fees.Dimensions{20_000_000, 1_000, 10_000, 10_000, 10_000},
+		MaxBlockUnits:              fees.Dimensions{1_800_000, 2_000, 20_000, 20_000, 20_000},
 
 		// Tx Parameters
 		ValidityWindow:      60 * hconsts.MillisecondsPerSecond, // ms

@@ -27,6 +27,7 @@ import (
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/crypto/ed25519"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/auth"
 	lconsts "github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/controller"
@@ -349,4 +350,33 @@ func removeAllGlob(pattern string) {
 		}
 	}
 	log.Printf("All files and directories matching pattern %s have been deleted", pattern)
+}
+
+func deployTestContractHelper(t *testing.T, prep prepeareResult) string {
+	discriminator := 111
+
+	//send CreateContract tx
+
+	parser, err := prep.instance.lcli.Parser(context.Background())
+	require.NoError(t, err)
+	submit, _, _, err := prep.instance.cli.GenerateTransaction(
+		context.Background(),
+		parser,
+		[]chain.Action{&actions.CreateContract{
+			Bytecode:      testWasmBytes,
+			Discriminator: uint16(discriminator),
+		}},
+		prep.factory,
+	)
+	require.NoError(t, err)
+	require.NoError(t, submit(context.Background()))
+
+	results := prep.expectBlk(t, prep.instance)(false)
+	require.Len(t, results, 1)
+	require.True(t, results[0].Success)
+
+	//contract deployed, get address from output
+	contractAddrString := string(results[0].Outputs[0][0])
+
+	return contractAddrString
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 
 	"github.com/ava-labs/hypersdk/codec"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
 	"github.com/ava-labs/hypersdk/fees"
@@ -108,26 +109,59 @@ func (j *JSONRPCServer) ContractBytecode(req *http.Request, args *ContractByteco
 	return err
 }
 
-type ContractStateArgs struct {
-	Address string `json:"address"`
+type ExecuteContractArgs struct {
+	ContractAddress string `json:"contractAddress"`
+	Payload         []byte `json:"payload"`
+	Actor           string `json:"actor"`
 }
 
-type ContractStateReply struct {
-	State []byte `json:"state"`
+type ExecuteContractReply struct {
+	DebugLog          string    `json:"debugLog"`
+	Result            []byte    `json:"result"`
+	Success           bool      `json:"success"`
+	Error             string    `json:"error"`
+	UpdatedKeys       [][4]byte `json:"updatedKeys"`
+	ReadKeys          [][4]byte `json:"readKeys"`
+	ComputeUnitsSpent uint64    `json:"computeUnitsSpent"`
 }
 
-func (j *JSONRPCServer) ContractState(req *http.Request, args *ContractStateArgs, reply *ContractStateReply) error {
-	ctx, span := j.c.Tracer().Start(req.Context(), "Server.ContractState")
+func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContractArgs, reply *ExecuteContractReply) error {
+	ctx, span := j.c.Tracer().Start(req.Context(), "Server.ExecuteContract")
 	defer span.End()
 
-	addr, err := codec.ParseAddressBech32(consts.HRP, args.Address)
+	contractAddr, err := codec.ParseAddressBech32(consts.HRP, args.ContractAddress)
 	if err != nil {
 		return err
 	}
-	state, err := j.c.GetContractStateFromState(ctx, addr)
+
+	actorAddr, err := codec.ParseAddressBech32(consts.HRP, args.Actor)
 	if err != nil {
 		return err
 	}
-	reply.State = state
-	return err
+
+	res, err := j.c.ExecuteContractOnState(ctx, contractAddr, actorAddr, args.Payload)
+	if err != nil {
+		return err
+	}
+
+	reply.DebugLog = string(res.DebugLog)
+	reply.Result = res.Result.Result
+	reply.Success = res.Result.Success
+	reply.Error = res.Result.Error
+
+	// Convert each [4]byte to KeyPostfix and assign to reply.ReadKeys
+	reply.ReadKeys = make([][4]byte, 0, len(res.Result.ReadKeys))
+	for _, key := range res.Result.ReadKeys {
+		reply.ReadKeys = append(reply.ReadKeys, [4]byte(key))
+	}
+
+	reply.UpdatedKeys = make([][4]byte, 0, len(res.Result.UpdatedKeys))
+	for key := range res.Result.UpdatedKeys {
+		reply.UpdatedKeys = append(reply.UpdatedKeys, [4]byte(key))
+	}
+
+	reply.ComputeUnitsSpent = res.FuelConsumed / 1_000_000 // TODO: move to consts
+	reply.ComputeUnitsSpent = max(actions.ExecuteContractMinComputeUnits, reply.ComputeUnitsSpent)
+
+	return nil
 }
