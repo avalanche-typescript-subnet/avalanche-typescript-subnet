@@ -81,7 +81,7 @@ func TestExecuteManyReadsAndWrites(t *testing.T) {
 	contractAddr, err := codec.ParseAddressBech32(lconsts.HRP, contractAddrString)
 	require.NoError(t, err)
 
-	//execute WRITE_MANY_SLOTS to write 14 slots
+	//execute WRITE_MANY_SLOTS to write slotsToWrite slots
 	writePayload := []byte{assets.CONTRACT_ACTION_WRITE_MANY_SLOTS, slotsToWrite}
 
 	callResult, err := prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, writePayload, prep.addrStr)
