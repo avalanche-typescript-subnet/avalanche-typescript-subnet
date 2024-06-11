@@ -73,7 +73,7 @@ func TestExecuteIncrement(t *testing.T) {
 }
 
 func TestExecuteManyReadsAndWrites(t *testing.T) {
-	slotsToWrite := byte(1) //FIXME: randomly raises (or not) "failed to decode client response: invalid signature  http://127.0.0.1:34527/coreapi" when above 0x1
+	slotsToWrite := byte(10)
 
 	prep := prepare(t)
 
