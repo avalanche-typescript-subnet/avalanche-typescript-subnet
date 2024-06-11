@@ -1,9 +1,11 @@
 package actions
 
 import (
+	"bytes"
 	"context"
 	"encoding/binary"
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -164,9 +166,17 @@ func (*ExecuteContract) ValidRange(chain.Rules) (int64, int64) {
 }
 func marshalKeys(keys map[runtime.KeyPostfix]state.Permissions, p *codec.Packer) {
 	p.PackInt(len(keys))
-	for k, v := range keys {
-		p.PackFixedBytes(k[:]) // Serialize the 4-byte KeyPostfix
-		p.PackByte(byte(v))    // Serialize the permissions associated with the key
+	keysOrdered := make([]runtime.KeyPostfix, 0, len(keys))
+	for k := range keys {
+		keysOrdered = append(keysOrdered, k)
+	}
+	sort.Slice(keysOrdered, func(i, j int) bool {
+		return bytes.Compare(keysOrdered[i][:], keysOrdered[j][:]) < 0
+	})
+
+	for _, k := range keysOrdered { // Iterate over the keys in sorted order
+		p.PackFixedBytes(k[:])    // Serialize the 4-byte KeyPostfix
+		p.PackByte(byte(keys[k])) // Serialize the permissions associated with the key
 	}
 }
 
