@@ -182,7 +182,7 @@ type ExecuteContractClientReply struct {
 	ComputeUnitsSpent uint64
 }
 
-func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, input []byte, actor string) (ExecuteContractClientReply, error) {
+func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, funcName string, input []byte, actor string) (ExecuteContractClientReply, error) {
 	originalResp := new(ExecuteContractReply)
 	err := cli.requester.SendRequest(
 		ctx,
@@ -190,6 +190,7 @@ func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, inpu
 		&ExecuteContractArgs{
 			ContractAddress: addr,
 			Payload:         input,
+			FunctionName:    funcName,
 			Actor:           actor,
 		},
 		originalResp,

@@ -25,6 +25,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 				Payload:             nil,
 				Keys:                nil,
 				ComputeUnitsToSpend: 0,
+				FunctionName:        "",
 			},
 			errorExpected: true,
 		},
@@ -35,6 +36,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 				Payload:             nil,
 				Keys:                nil,
 				ComputeUnitsToSpend: 0,
+				FunctionName:        "",
 			},
 		},
 		{
@@ -44,6 +46,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 				Payload:             []byte("payload"),
 				Keys:                nil,
 				ComputeUnitsToSpend: 0,
+				FunctionName:        "",
 			},
 		},
 		{
@@ -53,6 +56,17 @@ func TestExecuteContractSerialization(t *testing.T) {
 				Payload:             []byte{},
 				Keys:                nil,
 				ComputeUnitsToSpend: 0,
+				FunctionName:        "",
+			},
+		},
+		{
+			name: "Function name",
+			action: ExecuteContract{
+				ContractAddress:     testAddress,
+				Payload:             nil,
+				Keys:                nil,
+				ComputeUnitsToSpend: 0,
+				FunctionName:        "functionName",
 			},
 		},
 		{
@@ -62,6 +76,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 				Payload:             nil,
 				Keys:                nil,
 				ComputeUnitsToSpend: 123456,
+				FunctionName:        "",
 			},
 		},
 		{
@@ -73,6 +88,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 					{0x01, 0x02, 0x03, 0x04}: state.Read,
 				},
 				ComputeUnitsToSpend: 0,
+				FunctionName:        "",
 			},
 		},
 		{
@@ -87,6 +103,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 					{0x0d, 0x0e, 0x0f, 0x10}: state.All,
 				},
 				ComputeUnitsToSpend: 999888777,
+				FunctionName:        "functionName2",
 			},
 		},
 	}
@@ -121,6 +138,7 @@ func TestExecuteContractSerialization(t *testing.T) {
 			require.Equal(t, tt.action.Payload, unmarshalledEC.Payload, "Payload mismatch")
 			require.Equal(t, len(tt.action.Keys), len(unmarshalledEC.Keys), "Keys length mismatch")
 			require.Equal(t, tt.action.ComputeUnitsToSpend, unmarshalledEC.ComputeUnitsToSpend, "ComputeUnitsToSpend mismatch")
+			require.Equal(t, tt.action.FunctionName, unmarshalledEC.FunctionName, "FunctionName mismatch")
 
 			for k, v := range tt.action.Keys {
 				require.Equal(t, v, unmarshalledEC.Keys[k], "Permissions mismatch for key %v", k)

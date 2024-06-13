@@ -24,6 +24,7 @@ var _ chain.Action = (*ExecuteContract)(nil)
 type ExecuteContract struct {
 	ContractAddress     codec.Address                            `json:"contractAddress"`
 	Payload             []byte                                   `json:"payload"`
+	FunctionName        string                                   `json:"functionName"`
 	Keys                map[runtime.KeyPostfix]state.Permissions `json:"stateKeys"`
 	ComputeUnitsToSpend uint64                                   `json:"computeUnitsToSpend"`
 }
@@ -97,6 +98,7 @@ func (ec *ExecuteContract) Execute(
 		StateProvider: fixedStateProvider,
 		Payload:       ec.Payload,
 		Actor:         actor[:],
+		FunctionName:  ec.FunctionName,
 	}
 
 	res, err := runtime.NewJavyExec().Execute(params)
@@ -135,6 +137,7 @@ func (ec *ExecuteContract) Size() int {
 func (ec *ExecuteContract) Marshal(p *codec.Packer) {
 	p.PackAddress(ec.ContractAddress)
 	packBytesOrNull(p, ec.Payload)
+	p.PackString(ec.FunctionName)
 	marshalKeys(ec.Keys, p)
 	p.PackUint64(ec.ComputeUnitsToSpend)
 }
@@ -149,6 +152,8 @@ func UnmarshalExecuteContract(p *codec.Packer) (chain.Action, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	executeContract.FunctionName = p.UnpackString(false)
 
 	executeContract.Keys, err = unmarshalKeys(p)
 	if err != nil {

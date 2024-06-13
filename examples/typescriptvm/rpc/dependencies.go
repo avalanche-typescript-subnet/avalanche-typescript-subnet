@@ -21,5 +21,5 @@ type Controller interface {
 	GetTransaction(context.Context, ids.ID) (bool, int64, bool, fees.Dimensions, uint64, error)
 	GetBalanceFromState(context.Context, codec.Address) (uint64, error)
 	GetContractBytecodeFromState(context.Context, codec.Address) ([]byte, error)
-	ExecuteContractOnState(context.Context, codec.Address, codec.Address, []byte) (*runtime.JavyExecResult, error)
+	ExecuteContractOnState(context.Context, codec.Address, codec.Address, []byte, string) (*runtime.JavyExecResult, error)
 }

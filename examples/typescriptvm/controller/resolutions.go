@@ -57,6 +57,7 @@ func (c *Controller) ExecuteContractOnState(
 	contractAddress codec.Address,
 	actor codec.Address,
 	payload []byte,
+	funcName string,
 ) (*runtime.JavyExecResult, error) {
 	bytecode, err := c.GetContractBytecodeFromState(ctx, contractAddress)
 	if err != nil {
@@ -76,6 +77,7 @@ func (c *Controller) ExecuteContractOnState(
 		StateProvider: provider,
 		Payload:       payload,
 		Actor:         actor[:],
+		FunctionName:  funcName,
 	}
 
 	return runtime.NewJavyExec().Execute(params)

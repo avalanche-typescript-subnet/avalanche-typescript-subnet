@@ -111,6 +111,7 @@ func (j *JSONRPCServer) ContractBytecode(req *http.Request, args *ContractByteco
 
 type ExecuteContractArgs struct {
 	ContractAddress string `json:"contractAddress"`
+	FunctionName    string `json:"functionName"`
 	Payload         []byte `json:"payload"`
 	Actor           string `json:"actor"`
 }
@@ -139,7 +140,7 @@ func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContract
 		return err
 	}
 
-	res, err := j.c.ExecuteContractOnState(ctx, contractAddr, actorAddr, args.Payload)
+	res, err := j.c.ExecuteContractOnState(ctx, contractAddr, actorAddr, args.Payload, args.FunctionName)
 	if err != nil {
 		return err
 	}

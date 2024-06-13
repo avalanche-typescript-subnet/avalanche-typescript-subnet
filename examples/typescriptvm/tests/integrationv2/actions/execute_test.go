@@ -21,7 +21,14 @@ func TestRPCEcho(t *testing.T) {
 	contractAddrString := deployTestContractHelper(t, prep)
 
 	//echo test
-	callResult, err := prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, []byte{assets.CONTRACT_ACTION_ECHO, 70}, prep.addrStr)
+	callResult, err := prep.instance.lcli.ExecuteContract(
+		context.Background(),
+		contractAddrString,
+		"echo",
+		[]byte{70},
+		prep.addrStr,
+	)
+	require.True(t, callResult.Success, string(callResult.Error))
 	require.NoError(t, err)
 	require.Equal(t, []byte("70"), callResult.Result)
 }
@@ -34,14 +41,13 @@ func TestExecuteIncrement(t *testing.T) {
 	require.NoError(t, err)
 
 	//should be zero at first call
-	callResult, err := prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, []byte{assets.CONTRACT_ACTION_READ}, prep.addrStr)
+	callResult, err := prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, "read", []byte{}, prep.addrStr)
 	require.NoError(t, err)
 	require.Equal(t, []byte("0"), callResult.Result)
 
 	//execute increment only to figure out keys
-	incrementPayload := []byte{assets.CONTRACT_ACTION_INCREMENT, 0x7}
 
-	callResult, err = prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, incrementPayload, prep.addrStr)
+	callResult, err = prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, "increment", []byte{0x7}, prep.addrStr)
 	require.NoError(t, err)
 
 	//now execute increment in transaction
@@ -52,7 +58,8 @@ func TestExecuteIncrement(t *testing.T) {
 		parser,
 		[]chain.Action{&actions.ExecuteContract{
 			ContractAddress:     contractAddr,
-			Payload:             incrementPayload,
+			Payload:             []byte{0x7},
+			FunctionName:        "increment",
 			Keys:                callResult.Keys,
 			ComputeUnitsToSpend: callResult.ComputeUnitsSpent,
 		}},
@@ -66,7 +73,7 @@ func TestExecuteIncrement(t *testing.T) {
 	require.True(t, results[0].Success, string(results[0].Error))
 
 	//check again
-	callResult, err = prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, []byte{assets.CONTRACT_ACTION_READ}, prep.addrStr)
+	callResult, err = prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, "read", []byte{}, prep.addrStr)
 	require.NoError(t, err)
 	require.Equal(t, []byte("7"), callResult.Result)
 }
@@ -81,9 +88,9 @@ func TestExecuteManyReadsAndWrites(t *testing.T) {
 	require.NoError(t, err)
 
 	//execute WRITE_MANY_SLOTS to write slotsToWrite slots
-	writePayload := []byte{assets.CONTRACT_ACTION_WRITE_MANY_SLOTS, slotsToWrite}
+	writePayload := []byte{slotsToWrite}
 
-	callResult, err := prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, writePayload, prep.addrStr)
+	callResult, err := prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, "writeManySlots", writePayload, prep.addrStr)
 	require.NoError(t, err)
 
 	//now execute increment in transaction
@@ -97,6 +104,7 @@ func TestExecuteManyReadsAndWrites(t *testing.T) {
 			Payload:             writePayload,
 			Keys:                callResult.Keys,
 			ComputeUnitsToSpend: callResult.ComputeUnitsSpent,
+			FunctionName:        "writeManySlots",
 		}},
 		prep.factory,
 	)
@@ -108,9 +116,9 @@ func TestExecuteManyReadsAndWrites(t *testing.T) {
 	require.True(t, results[0].Success, string(results[0].Error))
 
 	//execute a bunch of reads in a transaction
-	readPayload := []byte{assets.CONTRACT_ACTION_READ_MANY_SLOTS, slotsToWrite}
+	readPayload := []byte{slotsToWrite}
 
-	callResult, err = prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, readPayload, prep.addrStr)
+	callResult, err = prep.instance.lcli.ExecuteContract(context.Background(), contractAddrString, "readManySlots", readPayload, prep.addrStr)
 	require.NoError(t, err)
 
 	//now execute increment in transaction
@@ -124,6 +132,7 @@ func TestExecuteManyReadsAndWrites(t *testing.T) {
 			Payload:             readPayload,
 			Keys:                callResult.Keys,
 			ComputeUnitsToSpend: callResult.ComputeUnitsSpent,
+			FunctionName:        "readManySlots",
 		}},
 		prep.factory,
 	)
