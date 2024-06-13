@@ -88,6 +88,7 @@ func (exec *JavyExec) executeOnState(params JavyExecParams, state map[KeyPostfix
 	callDataJson, err := JSPayload{
 		CurrentState: state,
 		Payload:      params.Payload,
+		FunctionName: params.FunctionName,
 		Actor:        params.Actor,
 	}.MarshalJSON()
 

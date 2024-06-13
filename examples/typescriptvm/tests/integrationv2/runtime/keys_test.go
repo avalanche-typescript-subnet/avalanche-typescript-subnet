@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/tests/integrationv2/runtime/assets"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -23,7 +22,8 @@ func TestWriteKeys(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateprovider.StateProvider,
-		Payload:       []byte{assets.CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
+		Payload:       []byte{4},
+		FunctionName:  "writeManySlots",
 	}
 
 	res, err := exec.Execute(params)
@@ -62,7 +62,8 @@ func TestReadKeys(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateprovider.StateProvider,
-		Payload:       []byte{assets.CONTRACT_ACTION_WRITE_MANY_SLOTS, 4},
+		Payload:       []byte{4},
+		FunctionName:  "writeManySlots",
 	}
 
 	res, err := exec.Execute(params)
@@ -75,10 +76,12 @@ func TestReadKeys(t *testing.T) {
 	require.Equal(t, 0, len(res.Result.ReadKeys))
 
 	//read
-	params.Payload = []byte{assets.CONTRACT_ACTION_READ_MANY_SLOTS, 4}
+	params.Payload = []byte{4}
+	params.FunctionName = "readManySlots"
 	res, err = exec.Execute(params)
 	require.NoError(t, err)
 
+	require.Equal(t, true, res.Result.Success, res.Result.Error)
 	require.Equal(t, 4, len(res.Result.ReadKeys))
 	expectedReadKeys := []runtime.KeyPostfix{
 		{0, 1, 0, 6},

@@ -9,7 +9,6 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
 	lconsts "github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/tests/integrationv2/runtime/assets"
 	"github.com/stretchr/testify/require"
 )
 
