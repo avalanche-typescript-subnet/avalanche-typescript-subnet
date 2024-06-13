@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/tests/integrationv2/runtime/assets"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,7 +24,8 @@ func TestReturn(t *testing.T) {
 		MaxMemory:     1024 * 1024 * 100,
 		Bytecode:      &testWasmBytes,
 		StateProvider: stateProvider.StateProvider,
-		Payload:       []byte{assets.CONTRACT_ACTION_INCREMENT, 7},
+		Payload:       []byte{7},
+		FunctionName:  "increment",
 	}
 
 	//execute 2 times for actor 1
@@ -56,7 +56,8 @@ func TestReturn(t *testing.T) {
 	}
 
 	//get result for actor 1
-	params.Payload = []byte{assets.CONTRACT_ACTION_READ}
+	params.Payload = []byte{}
+	params.FunctionName = "read"
 	params.Actor = actor1Bytes
 
 	res, err = exec.Execute(params)
@@ -77,7 +78,8 @@ func TestReturn(t *testing.T) {
 	}
 
 	//get result for actor 2
-	params.Payload = []byte{assets.CONTRACT_ACTION_READ}
+	params.Payload = []byte{}
+	params.FunctionName = "read"
 	params.Actor = actor2Bytes
 	res, err = exec.Execute(params)
 	if err != nil {
@@ -95,7 +97,8 @@ func TestReturn(t *testing.T) {
 	}
 
 	//check zero balance for actor 3
-	params.Payload = []byte{assets.CONTRACT_ACTION_READ}
+	params.Payload = []byte{}
+	params.FunctionName = "read"
 	params.Actor = actor3Bytes
 	res, err = exec.Execute(params)
 	if err != nil {
@@ -115,7 +118,8 @@ func TestReturn(t *testing.T) {
 func TestEcho(t *testing.T) {
 	exec := runtime.NewJavyExec()
 	params := DEFAULT_PARAMS_LIMITS
-	params.Payload = []byte{assets.CONTRACT_ACTION_ECHO, 124}
+	params.Payload = []byte{124}
+	params.FunctionName = "echo"
 	res, err := exec.Execute(params)
 	if err != nil {
 		t.Fatal(err)

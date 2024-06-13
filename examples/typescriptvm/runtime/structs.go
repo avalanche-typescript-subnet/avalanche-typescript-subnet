@@ -23,12 +23,14 @@ type JavyExecParams struct {
 	Bytecode      *[]byte
 	StateProvider StateProvider
 	Payload       []byte
+	FunctionName  string
 	Actor         []byte
 }
 
 type JSPayload struct {
 	CurrentState map[KeyPostfix][]byte `json:"currentState"`
 	Payload      []byte                `json:"payload"`
+	FunctionName string                `json:"functionName"`
 	Actor        []byte                `json:"actor"`
 }
 
@@ -133,10 +135,12 @@ func (j JSPayload) MarshalJSON() ([]byte, error) {
 	return json.Marshal(&struct {
 		CurrentState map[string]string `json:"currentState"`
 		Payload      string            `json:"payload"`
+		FunctionName string            `json:"functionName"`
 		Actor        string            `json:"actor"`
 	}{
 		CurrentState: currentState,
 		Payload:      base64.StdEncoding.EncodeToString(j.Payload),
+		FunctionName: j.FunctionName,
 		Actor:        base64.StdEncoding.EncodeToString(j.Actor),
 	})
 }
@@ -146,6 +150,7 @@ func (j *JSPayload) UnmarshalJSON(data []byte) error {
 	aux := &struct {
 		CurrentState map[string]string `json:"currentState"`
 		Payload      string            `json:"payload"`
+		FunctionName string            `json:"functionName"`
 		Actor        string            `json:"actor"`
 	}{}
 	if err := json.Unmarshal(data, aux); err != nil {
@@ -172,6 +177,8 @@ func (j *JSPayload) UnmarshalJSON(data []byte) error {
 	}
 	j.Payload = payload
 
+	j.FunctionName = aux.FunctionName
+
 	actor, err := base64.StdEncoding.DecodeString(aux.Actor)
 	if err != nil {
 		return err
@@ -189,5 +196,10 @@ func (b KeyPostfix) MarshalJSON() ([]byte, error) {
 	return json.Marshal(b[:])
 }
 func (b *KeyPostfix) UnmarshalJSON(data []byte) error {
-	return json.Unmarshal(data, b[:])
+	var temp [KEY_POSTFIX_LENGTH]byte
+	if err := json.Unmarshal(data, &temp); err != nil {
+		return err
+	}
+	copy(b[:], temp[:])
+	return nil
 }

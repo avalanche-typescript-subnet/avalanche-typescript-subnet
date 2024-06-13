@@ -74,20 +74,20 @@ class TracebleDB {
     }
 }
 
-let isFunctionRegistered = false;
-export function registerRawFunction(func: ExecuteContractFunc) {
-    if (isFunctionRegistered) {
-        throw new Error("registerFunction can only be called once.");
-    }
-    isFunctionRegistered = true;
 
+const funcs: Record<string, ExecuteContractFunc> = {};
+export function registerFunc(name: string, func: ExecuteContractFunc) {
+    funcs[name] = func;
+}
+
+export function execute() {
     try {
-
         const stdin = readStdin();
         const argsJSON = JSON.parse(stdin) as {
             currentState: Record<string, string>,
             payload: string,
             actor: string,
+            functionName: string,
         }
 
         const stateBytes: Record<string, Uint8Array> = {};
@@ -98,6 +98,16 @@ export function registerRawFunction(func: ExecuteContractFunc) {
         const db = new TracebleDB(stateBytes);
         const actor = Base64ToUint8Array(argsJSON.actor);
         const payload = Base64ToUint8Array(argsJSON.payload);
+        const functionName = argsJSON.functionName;
+
+        const func = funcs[functionName];
+        if (!func) {
+            writeStdOut(JSON.stringify({
+                success: false,
+                error: `Function ${functionName} not found`,
+            }))
+            return
+        }
 
         const result = func(payload, actor, db.getValue.bind(db), db.setValue.bind(db))
 
@@ -122,4 +132,4 @@ export function registerRawFunction(func: ExecuteContractFunc) {
 
 export * as encoders from './encoders';
 export * as io from './javy_io';
-export * as types from './types.d';
+export * from './types.d';
