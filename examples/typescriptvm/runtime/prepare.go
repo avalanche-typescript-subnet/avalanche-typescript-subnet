@@ -58,7 +58,7 @@ func (exec *JavyExec) createStore(wasmBytes *[]byte) (*wasmtime.Store, *wasmtime
 		return nil, nil, fmt.Errorf("instantiating javy library instance: %v", err)
 	}
 
-	linker.DefineInstance(store, "javy_quickjs_provider_v1", libraryInstance)
+	linker.DefineInstance(store, "javy_quickjs_provider_v2", libraryInstance)
 
 	linker.AllowShadowing(true)
 	userCodeInstance, err := linker.Instantiate(store, userCodeModule)
