@@ -31,7 +31,7 @@ func TestReturn(t *testing.T) {
 	//execute 2 times for actor 1
 	params.Actor = actor1Bytes
 	for i := 0; i < 2; i++ {
-		res, err := exec.Execute(params)
+		res, err := exec.Execute(params, runtime.EmptyCallbackFunc)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -47,7 +47,7 @@ func TestReturn(t *testing.T) {
 
 	//execute 1 time for actor 2
 	params.Actor = actor2Bytes
-	res, err := exec.Execute(params)
+	res, err := exec.Execute(params, runtime.EmptyCallbackFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -60,7 +60,7 @@ func TestReturn(t *testing.T) {
 	params.FunctionName = "read"
 	params.Actor = actor1Bytes
 
-	res, err = exec.Execute(params)
+	res, err = exec.Execute(params, runtime.EmptyCallbackFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ func TestReturn(t *testing.T) {
 	params.Payload = []byte{}
 	params.FunctionName = "read"
 	params.Actor = actor2Bytes
-	res, err = exec.Execute(params)
+	res, err = exec.Execute(params, runtime.EmptyCallbackFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestReturn(t *testing.T) {
 	params.Payload = []byte{}
 	params.FunctionName = "read"
 	params.Actor = actor3Bytes
-	res, err = exec.Execute(params)
+	res, err = exec.Execute(params, runtime.EmptyCallbackFunc)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func TestEcho(t *testing.T) {
 	params := DEFAULT_PARAMS_LIMITS
 	params.Payload = []byte{124}
 	params.FunctionName = "echo"
-	res, err := exec.Execute(params)
+	res, err := exec.Execute(params, runtime.EmptyCallbackFunc)
 	if err != nil {
 		t.Fatal(err)
 	}

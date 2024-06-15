@@ -9,6 +9,7 @@ interface JavyBuiltins {
 
 declare global {
     const Javy: JavyBuiltins;
+    function callback(payload: Uint8Array): Uint8Array;
 }
 
 
