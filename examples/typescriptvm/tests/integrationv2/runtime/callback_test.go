@@ -15,7 +15,7 @@ import (
 
 //create a docker image with javy first (read ../../../runtime/js_wcb_sdk/readme.md for more details)
 //go:generate ../../../runtime/js_wcb_sdk/build.sh compile assets/callback_test.ts
-//go:generate ../../../runtime/js_wcb_sdk/build.sh emit-provider ../../../runtime/javy_provider_1.4.0.wasm
+//go:generate ../../../runtime/js_wcb_sdk/build.sh emit-provider ../../../runtime/javy_provider.wasm
 
 //go:embed assets/callback_test.wasm
 var callbackTestWasmBytes []byte

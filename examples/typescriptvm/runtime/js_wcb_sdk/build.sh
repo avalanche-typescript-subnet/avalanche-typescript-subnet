@@ -43,15 +43,15 @@ case $1 in
   emit-provider)
         _wasmfile=$2
 
-        [ -z $_wasmfile ] && echo "Error: missing a target wasm file" && printUsage && exit 1; 
-
-        touch _wasmfile
+        [ -z ${_wasmfile} ] && echo "Error: missing a target wasm file" && printUsage && exit 1; 
+        touch ${_wasmfile}
         [ $? -ne 0 ] && echo "Could write to \"$_wasmfile\"" && exit 1
 
         path=$(readlink -e $_wasmfile)
         path=${path%/*}
+        filename=${_wasmfile##*/}
 
-        docker run --rm -v ${path}:/out javy-callback:latest emit-provider -o /out/javy_provider_1.4.0.wasm
+        docker run --rm -v ${path}:/out javy-callback:latest emit-provider -o /out/${filename}
 
         #clear cache
         rm -f ${HOME}/.cache/*.cwasm
