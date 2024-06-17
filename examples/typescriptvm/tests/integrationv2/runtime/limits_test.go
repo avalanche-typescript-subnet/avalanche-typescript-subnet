@@ -46,7 +46,7 @@ func TestMaxFuel(t *testing.T) {
 			params.MaxFuel = tc.maxFuel
 			params.Payload = tc.payload
 			params.FunctionName = "loadCPU"
-			res, err := exec.Execute(params, runtime.EmptyCallbackFunc)
+			res, err := exec.Execute(params)
 
 			if err != nil && !strings.Contains(err.Error(), "all fuel consumed") {
 				t.Errorf("Expected an all fuel consumed error but got %v", err)
@@ -71,7 +71,7 @@ func TestMaxTime(t *testing.T) {
 	params.Payload = []byte{0x10}
 	params.FunctionName = "writeManySlots"
 
-	_, err := exec.Execute(params, runtime.EmptyCallbackFunc)
+	_, err := exec.Execute(params)
 	if err != nil {
 		t.Error(err)
 		return
@@ -79,7 +79,7 @@ func TestMaxTime(t *testing.T) {
 
 	params.MaxTime = time.Nanosecond
 
-	_, err = exec.Execute(params, runtime.EmptyCallbackFunc)
+	_, err = exec.Execute(params)
 	if err == nil {
 		t.Error("Expected error")
 	}
@@ -111,7 +111,7 @@ func TestMaxMemory(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			params.MaxMemory = tc.maxMemory
 			params.Payload = tc.payload
-			res, err := exec.Execute(params, runtime.EmptyCallbackFunc)
+			res, err := exec.Execute(params)
 
 			require.Nil(t, err)
 

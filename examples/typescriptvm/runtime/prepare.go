@@ -13,17 +13,9 @@ import (
 // speeds up code execution 3 times in exchange for higher memory usage and and non-deterministic gas counting.
 const EXECUTE_CACHE_ENABLED = false
 
-type CallbackFunc func([]byte) ([]byte, error)
-
-func EmptyCallbackFunc([]byte) ([]byte, error) {
-	return nil, fmt.Errorf("empty callback")
-}
-
-func _emptyCallbackFunc(int32, int32) int64 { return 0 }
-
 //go:generate bash -c "cd js_sdk && [ ! -d node_modules ] && npm ci || echo 'node_modules already present'"
 
-func (exec *JavyExec) createStore(wasmBytes *[]byte, callback CallbackFunc) (*wasmtime.Store, *wasmtime.Func, error) {
+func (exec *JavyExec) createStore(wasmBytes *[]byte) (*wasmtime.Store, *wasmtime.Func, error) {
 
 	var wasmHash uint64
 	if EXECUTE_CACHE_ENABLED {

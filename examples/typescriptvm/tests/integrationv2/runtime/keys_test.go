@@ -25,19 +25,8 @@ func TestWriteKeys(t *testing.T) {
 		Payload:       []byte{4},
 		FunctionName:  "writeManySlots",
 	}
-	var callback runtime.CallbackFunc = func(src []byte) ([]byte, error) {
-		dst := make([]byte, len(src)*2)
-		for i := 0; i < len(src)*2; i++ {
-			if i < len(src) {
-				dst[i] = src[i]
-			} else {
-				dst[i] = byte(100 + i)
-			}
-		}
-		return dst, nil
-	}
 
-	res, err := exec.Execute(params, callback)
+	res, err := exec.Execute(params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +66,7 @@ func TestReadKeys(t *testing.T) {
 		FunctionName:  "writeManySlots",
 	}
 
-	res, err := exec.Execute(params, runtime.EmptyCallbackFunc)
+	res, err := exec.Execute(params)
 	require.NoError(t, err)
 	for updatedKey, updatedVal := range res.Result.UpdatedKeys {
 		stateprovider.SetState(updatedKey, updatedVal)
@@ -89,7 +78,7 @@ func TestReadKeys(t *testing.T) {
 	//read
 	params.Payload = []byte{4}
 	params.FunctionName = "readManySlots"
-	res, err = exec.Execute(params, runtime.EmptyCallbackFunc)
+	res, err = exec.Execute(params)
 	require.NoError(t, err)
 
 	require.Equal(t, true, res.Result.Success, res.Result.Error)

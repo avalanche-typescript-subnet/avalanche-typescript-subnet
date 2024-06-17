@@ -38,11 +38,11 @@ func NewJavyExec() *JavyExec {
 	}
 }
 
-func (exec *JavyExec) Execute(params JavyExecParams, callback CallbackFunc) (*JavyExecResult, error) {
+func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 	var state map[KeyPostfix][]byte = make(map[KeyPostfix][]byte)
 
 	for i := 0; i < 100; i++ { //curcuit breaker
-		res, err := exec.executeOnState(params, state, callback)
+		res, err := exec.executeOnState(params, state)
 		if err != nil {
 			return nil, err
 		}
@@ -72,8 +72,8 @@ func (exec *JavyExec) Execute(params JavyExecParams, callback CallbackFunc) (*Ja
 	return nil, fmt.Errorf("execution failed after 100 attempts")
 }
 
-func (exec *JavyExec) executeOnState(params JavyExecParams, state map[KeyPostfix][]byte, callback CallbackFunc) (*JavyExecResult, error) {
-	store, mainFunc, err := exec.createStore(params.Bytecode, callback)
+func (exec *JavyExec) executeOnState(params JavyExecParams, state map[KeyPostfix][]byte) (*JavyExecResult, error) {
+	store, mainFunc, err := exec.createStore(params.Bytecode)
 	if err != nil {
 		return nil, err
 	}

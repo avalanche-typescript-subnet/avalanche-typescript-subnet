@@ -87,6 +87,4 @@ registerFunc("loadCPU", (payload: Uint8Array, actor: Uint8Array, getBytes: GetBy
     return encoder.encode(JSON.stringify(summ));
 })
 
-
-
 execute();
