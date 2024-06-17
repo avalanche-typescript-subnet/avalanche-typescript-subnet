@@ -19,7 +19,7 @@ var DEFAULT_PARAMS_LIMITS = runtime.JavyExecParams{
 	Payload:       []byte{},
 	FunctionName:  "loadCPU",
 	Actor:         []byte{},
-	StateProvider: (&DummyStateProvider{}).StateProvider,
+	StateProvider: runtime.NewDummyStateProvider().StateProvider,
 }
 
 func TestMaxFuel(t *testing.T) {

@@ -22,11 +22,11 @@ import (
 var _ chain.Action = (*ExecuteContract)(nil)
 
 type ExecuteContract struct {
-	ContractAddress     codec.Address                            `json:"contractAddress"`
-	Payload             []byte                                   `json:"payload"`
-	FunctionName        string                                   `json:"functionName"`
-	Keys                map[runtime.KeyPostfix]state.Permissions `json:"stateKeys"`
-	ComputeUnitsToSpend uint64                                   `json:"computeUnitsToSpend"`
+	ContractAddress     codec.Address                `json:"contractAddress"`
+	Payload             []byte                       `json:"payload"`
+	FunctionName        string                       `json:"functionName"`
+	Keys                map[string]state.Permissions `json:"stateKeys"`
+	ComputeUnitsToSpend uint64                       `json:"computeUnitsToSpend"`
 }
 
 func (*ExecuteContract) GetTypeID() uint8 {
@@ -52,7 +52,8 @@ func (ec *ExecuteContract) StateKeys(actor codec.Address, _ ids.ID) state.Keys {
 func (ec *ExecuteContract) StateKeysMaxChunks() []uint16 {
 	output := make([]uint16, 0, len(ec.Keys))
 	for k := range ec.Keys {
-		maxChunks := binary.BigEndian.Uint16(k[:len(k)-2])
+		kBytes := []byte(k)
+		maxChunks := binary.BigEndian.Uint16(kBytes[:len(kBytes)-2])
 		output = append(output, maxChunks)
 	}
 	return output
@@ -71,7 +72,8 @@ func (ec *ExecuteContract) Execute(
 		return nil, err
 	}
 
-	precachedValues := make(map[runtime.KeyPostfix][]byte)
+	precachedValues := make(map[string][]byte)
+
 	for keyPostfix, permissions := range ec.Keys {
 		if permissions&state.Read == 0 {
 			continue
@@ -84,10 +86,8 @@ func (ec *ExecuteContract) Execute(
 		precachedValues[keyPostfix] = val
 	}
 
-	var fixedStateProvider runtime.StateProvider = func(key runtime.KeyPostfix) ([]byte, error) {
-		postfix := runtime.KeyPostfix{}
-		copy(postfix[:], key[len(key)-runtime.KEY_POSTFIX_LENGTH:])
-		return precachedValues[postfix], nil
+	var fixedStateProvider runtime.StateProvider = func(key string) ([]byte, error) {
+		return precachedValues[string(key)], nil
 	}
 
 	params := runtime.JavyExecParams{ // FIXME:move limits to config
@@ -169,7 +169,7 @@ func (*ExecuteContract) ValidRange(chain.Rules) (int64, int64) {
 	// Returning -1, -1 means that the action is always valid.
 	return -1, -1
 }
-func marshalKeys(keys map[runtime.KeyPostfix]state.Permissions, p *codec.Packer) {
+func marshalKeys(keys map[string]state.Permissions, p *codec.Packer) {
 	p.PackInt(len(keys))
 	keysOrdered := make([]runtime.KeyPostfix, 0, len(keys))
 	for k := range keys {

@@ -5,10 +5,8 @@ package runtime_test
 
 import (
 	_ "embed"
-	"fmt"
 
 	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 )
 
 //go:embed assets/simple_counter.wasm
@@ -21,27 +19,10 @@ func createActorAddress(actorNumber uint) []byte {
 	return actorBytes
 }
 
-type DummyStateProvider struct {
-	State map[runtime.KeyPostfix][]byte
-}
-
-func (d *DummyStateProvider) StateProvider(key runtime.KeyPostfix) ([]byte, error) {
-	value, exists := d.State[key]
-	if !exists {
-		return []byte{}, nil
-	}
-	return value, nil
-}
-
-func (d *DummyStateProvider) SetState(key runtime.KeyPostfix, value []byte) {
-	d.State[key] = value
-	d.Print()
-}
-
-func (d *DummyStateProvider) Print() {
-	fmt.Printf("State now has %d entries\n", len(d.State))
-	for k, v := range d.State {
-		fmt.Printf("%x: %x\n", k, v)
-	}
-	fmt.Println()
-}
+// func (d *DummyStateProvider) Print() {
+// 	fmt.Printf("State now has %d entries\n", len(d.State))
+// 	for k, v := range d.State {
+// 		fmt.Printf("%x: %x\n", k, v)
+// 	}
+// 	fmt.Println()
+// }
