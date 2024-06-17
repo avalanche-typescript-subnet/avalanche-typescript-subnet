@@ -1,6 +1,7 @@
 package runtime_test
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -94,21 +95,22 @@ func TestMaxMemory(t *testing.T) {
 	params.MaxFuel = 1000 * 1000 * 1000
 
 	testCases := []struct {
-		name          string
 		maxMemory     int64
 		payload       []byte
 		expectSuccess bool
 	}{
-		{"20 pages, 0x17 - no error expected", 20 * MEMORY_PAGE_64KB, []byte{0x17}, true},
-		{"20 pages, 0x18 - error expected", 20 * MEMORY_PAGE_64KB, []byte{0x18}, false},
-		{"21 pages, 0x18 - no error expected", 21 * MEMORY_PAGE_64KB, []byte{0x18}, true},
-		{"21 pages, 0x19 - no error expected", 21 * MEMORY_PAGE_64KB, []byte{0x02, 0x19}, true},
-		//...
-		{"21 pages, 0x27 - error expected", 21 * MEMORY_PAGE_64KB, []byte{0x27}, false},
+		{22 * MEMORY_PAGE_64KB, []byte{0x19}, true},
+		{22 * MEMORY_PAGE_64KB, []byte{0x20}, false},
+		{23 * MEMORY_PAGE_64KB, []byte{0x20}, true},
+		{23 * MEMORY_PAGE_64KB, []byte{0x26}, true},
+		{23 * MEMORY_PAGE_64KB, []byte{0x27}, false},
+		{24 * MEMORY_PAGE_64KB, []byte{0x27}, false},
+		{25 * MEMORY_PAGE_64KB, []byte{0x27}, true},
+		{25 * MEMORY_PAGE_64KB, []byte{0x29}, true},
 	}
 
 	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
+		t.Run(fmt.Sprintf("%d pages, payload=0x%x, expectedSuccess=%v", tc.maxMemory/MEMORY_PAGE_64KB, tc.payload, tc.expectSuccess), func(t *testing.T) {
 			params.MaxMemory = tc.maxMemory
 			params.Payload = tc.payload
 			res, err := exec.Execute(params)
