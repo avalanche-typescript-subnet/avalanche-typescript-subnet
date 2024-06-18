@@ -23,9 +23,7 @@ var callbackTestWasmBytes []byte
 func TestCallback(t *testing.T) {
 
 	exec := runtime.NewJavyExec()
-	stateprovider := &DummyStateProvider{
-		State: map[runtime.KeyPostfix][]byte{},
-	}
+	stateprovider := runtime.NewDummyStateProvider()
 
 	params := runtime.JavyExecParams{
 		MaxFuel:       10 * 1000 * 1000,
@@ -53,20 +51,25 @@ func TestCallback(t *testing.T) {
 
 	// registering the callback
 	runtime.SetCallbackFunc(callback)
+	for n := 0; n < 5; n++ {
 
-	res, err := exec.Execute(params)
-	assert.NoError(t, err)
-	assert.Equal(t, true, res.Result.Success)
-
-	fmt.Println("Result.Result: ", string(res.Result.Result))
-
-	resArray := map[string]byte{}
-	err = json.Unmarshal(res.Result.Result, &resArray)
-	assert.NoError(t, err)
-	for k, v := range resArray {
-		i, _ := strconv.Atoi(k)
+		startTime := time.Now()
+		res, err := exec.Execute(params)
+		fmt.Println("Time to execute: ", time.Since(startTime))
 		assert.NoError(t, err)
-		assert.Equal(t, dst[i], v)
+		assert.Equal(t, true, res.Result.Success)
+
+		//fmt.Println("Result.Result: ", string(res.Result.Result))
+
+		resArray := map[string]byte{}
+		err = json.Unmarshal(res.Result.Result, &resArray)
+		assert.NoError(t, err)
+		for k, v := range resArray {
+			i, _ := strconv.Atoi(k)
+			assert.NoError(t, err)
+			assert.Equal(t, dst[i], v)
+		}
+
 	}
 
 }
