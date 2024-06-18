@@ -1,17 +1,19 @@
-import { Base64ToHexString, Base64ToUint8Array, HexStringToBase64, Uint8ArrayToBase64 } from "./encoders";
+import { Base64ToHexString, Base64ToUint8Array, HexStringToBase64, Uint8ArrayToBase64, Uint8ArrayToHex } from "./encoders";
 import { readStdin, writeStdOut } from "./javy_io";
 import { ExecuteContractFunc } from "./types";
 
-const keyHexAddress = (slot: number, chunks: number) => {
+const MAX_SLOT_ADDR_LENGTH = 34;
+
+const keyHexAddress = (slotAddr: Uint8Array, chunks: number) => {
     //check slot and chunks are valid
-    if (slot < 0 || slot > 65535) {
-        throw new Error(`Slot must be a value between 0 and 65535.`);
+    if (slotAddr.length > MAX_SLOT_ADDR_LENGTH || slotAddr.length === 0) {
+        throw new Error(`Slot address must be between 1 and ${MAX_SLOT_ADDR_LENGTH} bytes.`);
     }
     if (chunks < 1 || chunks > 65535) {//uint16 check for size
         throw new Error("Size must be a value between 1 and 65535.");
     }
 
-    return `0x${slot.toString(16).padStart(4, '0')}${chunks.toString(16).padStart(4, '0')}`
+    return `${Uint8ArrayToHex(slotAddr)}${chunks.toString(16).padStart(4, '0')}`
 }
 
 console.warn = console.log//FIXME: monkey-patching
@@ -27,7 +29,7 @@ class TracebleDB {
         this._writes = new Set();
     }
 
-    getValue(slot: number, chunks: number): Uint8Array {
+    getValue(slot: Uint8Array, chunks: number): Uint8Array {
         const address = keyHexAddress(slot, chunks);
         console.log(`Reading ${address}`)
 
@@ -40,7 +42,7 @@ class TracebleDB {
         return this._state[address];
     }
 
-    setValue(slot: number, chunks: number, value: Uint8Array): void {
+    setValue(slot: Uint8Array, chunks: number, value: Uint8Array): void {
         const address = keyHexAddress(slot, chunks);
         console.log(`Writing ${address}`)
         //check size
@@ -89,6 +91,10 @@ export function execute() {
             actor: string,
             functionName: string,
         }
+
+        console.log('argsJSON', JSON.stringify(argsJSON))
+        console.log('stdin', stdin)
+
 
         const stateBytes: Record<string, Uint8Array> = {};
         for (const [key, value] of Object.entries(argsJSON.currentState)) {

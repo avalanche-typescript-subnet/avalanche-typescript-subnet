@@ -6,15 +6,7 @@ import (
 	"time"
 )
 
-type ResultJSON struct {
-	Result      []byte                `json:"result"`
-	Success     bool                  `json:"success"`
-	UpdatedKeys map[KeyPostfix][]byte `json:"updatedKeys"`
-	ReadKeys    []KeyPostfix          `json:"readKeys"`
-	Error       string                `json:"error"`
-}
-
-type StateProvider func(KeyPostfix) ([]byte, error)
+type StateProvider func(string) ([]byte, error)
 
 type JavyExecParams struct {
 	MaxFuel       uint64
@@ -27,179 +19,90 @@ type JavyExecParams struct {
 	Actor         []byte
 }
 
+// payload
+
 type JSPayload struct {
-	CurrentState map[KeyPostfix][]byte `json:"currentState"`
-	Payload      []byte                `json:"payload"`
-	FunctionName string                `json:"functionName"`
-	Actor        []byte                `json:"actor"`
+	CurrentState *map[string][]byte `json:"currentState"`
+	Payload      []byte             `json:"payload"`
+	FunctionName string             `json:"functionName"`
+	Actor        []byte             `json:"actor"`
 }
 
-// Convert KeyPostfix to base64 string
-func byteArrayToBase64String(arr KeyPostfix) string {
-	return base64.StdEncoding.EncodeToString(arr[:])
-}
-
-// Convert base64 string to KeyPostfix
-func base64StringToByteArray(str string) (KeyPostfix, error) {
-	bytes, err := base64.StdEncoding.DecodeString(str)
-	if err != nil {
-		return KeyPostfix{}, err
+func (p JSPayload) MarshalJSON() ([]byte, error) {
+	type Alias JSPayload
+	encodedState := make(map[string][]byte)
+	for k, v := range *p.CurrentState {
+		encodedKey := base64.StdEncoding.EncodeToString([]byte(k))
+		encodedState[encodedKey] = v
 	}
-	var arr KeyPostfix
-	copy(arr[:], bytes)
-	return arr, nil
-}
-
-// Custom JSON marshalling for ResultJSON
-func (r ResultJSON) MarshalJSON() ([]byte, error) {
-	updatedKeys := make(map[string]string)
-	for k, v := range r.UpdatedKeys {
-		updatedKeys[byteArrayToBase64String(k)] = base64.StdEncoding.EncodeToString(v)
-	}
-
-	readKeys := make([]string, len(r.ReadKeys))
-	for i, key := range r.ReadKeys {
-		readKeys[i] = byteArrayToBase64String(key)
-	}
-
 	return json.Marshal(&struct {
-		Result      string            `json:"result"`
-		Success     bool              `json:"success"`
-		UpdatedKeys map[string]string `json:"updatedKeys"`
-		ReadKeys    []string          `json:"readKeys"`
-		Error       string            `json:"error"`
+		CurrentState map[string][]byte `json:"currentState"`
+		*Alias
 	}{
-		Result:      base64.StdEncoding.EncodeToString(r.Result),
-		Success:     r.Success,
-		UpdatedKeys: updatedKeys,
-		ReadKeys:    readKeys,
-		Error:       r.Error,
+		CurrentState: encodedState,
+		Alias:        (*Alias)(&p),
 	})
 }
 
-// Custom JSON unmarshalling for ResultJSON
+// state provider
+
+type DummyStateProvider struct {
+	state map[string][]byte
+}
+
+func NewDummyStateProvider() *DummyStateProvider {
+	return &DummyStateProvider{
+		state: make(map[string][]byte),
+	}
+}
+
+func (d *DummyStateProvider) StateProvider(key string) ([]byte, error) {
+	value, exists := d.state[key]
+	if exists {
+		return value, nil
+	} else {
+		return []byte{}, nil
+	}
+}
+
+func (d *DummyStateProvider) Update(newVals map[string][]byte) {
+	for k, v := range newVals {
+		d.state[k] = v
+	}
+}
+
+//result json
+
+type ResultJSON struct {
+	Result      []byte            `json:"result"`
+	Success     bool              `json:"success"`
+	UpdatedKeys map[string][]byte `json:"updatedKeys"`
+	ReadKeys    [][]byte          `json:"readKeys"`
+	Error       string            `json:"error"`
+}
+
 func (r *ResultJSON) UnmarshalJSON(data []byte) error {
+	type Alias ResultJSON
 	aux := &struct {
-		Result      string            `json:"result"`
-		Success     bool              `json:"success"`
-		UpdatedKeys map[string]string `json:"updatedKeys"`
-		ReadKeys    []string          `json:"readKeys"`
-		Error       string            `json:"error"`
-	}{}
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-
-	result, err := base64.StdEncoding.DecodeString(aux.Result)
-	if err != nil {
-		return err
-	}
-	r.Result = result
-	r.Success = aux.Success
-	r.Error = aux.Error
-
-	updatedKeys := make(map[KeyPostfix][]byte)
-	for k, v := range aux.UpdatedKeys {
-		key, err := base64StringToByteArray(k)
-		if err != nil {
-			return err
-		}
-		value, err := base64.StdEncoding.DecodeString(v)
-		if err != nil {
-			return err
-		}
-		updatedKeys[key] = value
-	}
-	r.UpdatedKeys = updatedKeys
-
-	readKeys := make([]KeyPostfix, len(aux.ReadKeys))
-	for i, key := range aux.ReadKeys {
-		readKey, err := base64StringToByteArray(key)
-		if err != nil {
-			return err
-		}
-		readKeys[i] = readKey
-	}
-	r.ReadKeys = readKeys
-
-	return nil
-}
-
-// Custom JSON marshalling for JSPayload
-func (j JSPayload) MarshalJSON() ([]byte, error) {
-	currentState := make(map[string]string)
-	for k, v := range j.CurrentState {
-		currentState[byteArrayToBase64String(k)] = base64.StdEncoding.EncodeToString(v)
-	}
-
-	return json.Marshal(&struct {
-		CurrentState map[string]string `json:"currentState"`
-		Payload      string            `json:"payload"`
-		FunctionName string            `json:"functionName"`
-		Actor        string            `json:"actor"`
+		UpdatedKeys map[string][]byte `json:"updatedKeys"`
+		*Alias
 	}{
-		CurrentState: currentState,
-		Payload:      base64.StdEncoding.EncodeToString(j.Payload),
-		FunctionName: j.FunctionName,
-		Actor:        base64.StdEncoding.EncodeToString(j.Actor),
-	})
-}
+		Alias: (*Alias)(r),
+	}
 
-// Custom JSON unmarshalling for JSPayload
-func (j *JSPayload) UnmarshalJSON(data []byte) error {
-	aux := &struct {
-		CurrentState map[string]string `json:"currentState"`
-		Payload      string            `json:"payload"`
-		FunctionName string            `json:"functionName"`
-		Actor        string            `json:"actor"`
-	}{}
-	if err := json.Unmarshal(data, aux); err != nil {
+	if err := json.Unmarshal(data, &aux); err != nil {
 		return err
 	}
 
-	currentState := make(map[KeyPostfix][]byte)
-	for k, v := range aux.CurrentState {
-		key, err := base64StringToByteArray(k)
+	decodedKeys := make(map[string][]byte)
+	for k, v := range aux.UpdatedKeys {
+		decodedKey, err := base64.StdEncoding.DecodeString(k)
 		if err != nil {
 			return err
 		}
-		value, err := base64.StdEncoding.DecodeString(v)
-		if err != nil {
-			return err
-		}
-		currentState[key] = value
+		decodedKeys[string(decodedKey)] = v
 	}
-	j.CurrentState = currentState
+	r.UpdatedKeys = decodedKeys
 
-	payload, err := base64.StdEncoding.DecodeString(aux.Payload)
-	if err != nil {
-		return err
-	}
-	j.Payload = payload
-
-	j.FunctionName = aux.FunctionName
-
-	actor, err := base64.StdEncoding.DecodeString(aux.Actor)
-	if err != nil {
-		return err
-	}
-	j.Actor = actor
-
-	return nil
-}
-
-const KEY_POSTFIX_LENGTH = 4
-
-type KeyPostfix [KEY_POSTFIX_LENGTH]byte
-
-func (b KeyPostfix) MarshalJSON() ([]byte, error) {
-	return json.Marshal(b[:])
-}
-func (b *KeyPostfix) UnmarshalJSON(data []byte) error {
-	var temp [KEY_POSTFIX_LENGTH]byte
-	if err := json.Unmarshal(data, &temp); err != nil {
-		return err
-	}
-	copy(b[:], temp[:])
 	return nil
 }

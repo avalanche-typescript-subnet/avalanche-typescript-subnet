@@ -10,7 +10,6 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 
 	_ "github.com/ava-labs/hypersdk/examples/typescriptvm/registry" // ensure registry populated
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 	"github.com/ava-labs/hypersdk/state"
 
 	"github.com/ava-labs/hypersdk/chain"
@@ -178,7 +177,7 @@ type ExecuteContractClientReply struct {
 	Result            []byte
 	Success           bool
 	Error             string
-	Keys              map[runtime.KeyPostfix]state.Permissions
+	Keys              map[string]state.Permissions
 	ComputeUnitsSpent uint64
 }
 
@@ -203,16 +202,16 @@ func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, func
 	resp.Error = originalResp.Error
 	resp.ComputeUnitsSpent = originalResp.ComputeUnitsSpent
 
-	resp.Keys = make(map[runtime.KeyPostfix]state.Permissions)
+	resp.Keys = make(map[string]state.Permissions)
 
 	for _, key := range originalResp.ReadKeys {
-		resp.Keys[key] = state.Read
+		resp.Keys[string(key)] = state.Read
 	}
 	for _, key := range originalResp.UpdatedKeys {
-		if _, hadRead := (resp.Keys)[key]; !hadRead {
-			resp.Keys[key] = state.Write | state.Allocate
+		if _, hadRead := (resp.Keys)[string(key)]; !hadRead {
+			resp.Keys[string(key)] = state.Write | state.Allocate
 		} else {
-			resp.Keys[key] = state.Write | state.Allocate | state.Read
+			resp.Keys[string(key)] = state.Write | state.Allocate | state.Read
 		}
 	}
 
