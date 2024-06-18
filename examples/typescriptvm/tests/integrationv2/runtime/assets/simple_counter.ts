@@ -1,34 +1,23 @@
 import { registerFunc, encoders, GetBytesFunc, SetBytesFunc, execute } from "../../../../runtime/js_sdk";
+import { BigintToUint8Array, Uint8ArrayToBigint } from "../../../../runtime/js_sdk/src/encoders";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();
 
 registerFunc("read", (_payload: Uint8Array, actor: Uint8Array, getBytes: GetBytesFunc, _setBytes: SetBytesFunc) => {
-    const actorString = encoders.Uint8ArrayToBase64(actor);
+    const balanceBytes = getBytes(new Uint8Array(actor), 10)
+    const balance = Uint8ArrayToBigint(balanceBytes)
 
-    const stringAtSlotZero = decoder.decode(
-        getBytes(new Uint8Array([0x0]), 10)
-    )
-    const dataAtSlotZero = stringAtSlotZero === "" ? {} : JSON.parse(stringAtSlotZero);
-
-    const toReturn = dataAtSlotZero[actorString] || 0
-
-    return encoder.encode(JSON.stringify(toReturn));
+    return encoder.encode(balance.toString());
 })
 
 registerFunc("increment", (payload: Uint8Array, actor: Uint8Array, getBytes: GetBytesFunc, setBytes: SetBytesFunc) => {
-    const actorString = encoders.Uint8ArrayToBase64(actor);
     const value = payload[0];
 
-
-    const stringAtSlotZero = decoder.decode(
-        getBytes(new Uint8Array([0x0]), 10)
-    )
-    const dataAtSlotZero = stringAtSlotZero === "" ? {} : JSON.parse(stringAtSlotZero);
-
-    dataAtSlotZero[actorString] = (dataAtSlotZero[actorString] || 0) + value;
-
-    setBytes(new Uint8Array([0x0]), 10, encoder.encode(JSON.stringify(dataAtSlotZero)));
+    const balanceBytes = getBytes(new Uint8Array(actor), 10)
+    const balance = Uint8ArrayToBigint(balanceBytes)
+    const newBalance = balance + BigInt(value)
+    setBytes(new Uint8Array(actor), 10, BigintToUint8Array(newBalance))
 
     return new Uint8Array();
 })
