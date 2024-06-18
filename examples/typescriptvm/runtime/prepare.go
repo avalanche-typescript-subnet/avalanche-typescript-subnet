@@ -81,7 +81,7 @@ func (exec *JavyExec) createStore(wasmBytes *[]byte) (*wasmtime.Store, *wasmtime
 				fmt.Println("realloc_fn call error:", err)
 				return 0
 			}
-
+			wasmMem = memory.UnsafeData(store)
 			dstPointer, ok := _dstPointer.(int32)
 			if !ok {
 				fmt.Println("dstPointer type error:", err)
@@ -90,7 +90,7 @@ func (exec *JavyExec) createStore(wasmBytes *[]byte) (*wasmtime.Store, *wasmtime
 
 			size := copy(wasmMem[dstPointer:], res)
 			if size != len(res) {
-				fmt.Println("copy error:", err)
+				fmt.Println("copy error: copied only", size, "of", len(res))
 				return 0
 			}
 

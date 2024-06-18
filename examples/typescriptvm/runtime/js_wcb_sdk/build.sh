@@ -4,6 +4,7 @@ printUsage () {
     cat << EOT
 Usage: $0 compile [ts-file] [optional wasm-file]
        $0 emit-provider [wasm-file]
+       $0 build
 
 EOT
 }
@@ -55,6 +56,9 @@ case $1 in
 
         #clear cache
         rm -f ${HOME}/.cache/*.cwasm
+    ;;
+  build)
+        docker inspect javy-callback:latest 1>/dev/null 2>/dev/null || docker build -t javy-callback:latest ./../../../runtime/js_wcb_sdk
     ;;
   *)
     echo "Unknown command: $1"
