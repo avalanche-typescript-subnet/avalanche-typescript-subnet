@@ -73,7 +73,7 @@ func GetContractBytecodeFromState(
 	return values[0], errs[0]
 }
 
-func ContractStateKey(contractAddr codec.Address, postfix runtime.KeyPostfix) []byte {
+func ContractStateKey(contractAddr codec.Address, postfix []byte) []byte {
 	return append(append([]byte{contractStatePrefix}, contractAddr[:]...), postfix[:]...)
 }
 
@@ -82,8 +82,8 @@ func GetContractStateProviderFromState(
 	f ReadState,
 	addr codec.Address,
 ) runtime.StateProvider {
-	return func(postfix runtime.KeyPostfix) ([]byte, error) { //FIXME: would be more efficient to batch get all state keys
-		k := ContractStateKey(addr, postfix)
+	return func(postfix string) ([]byte, error) { //FIXME: would be more efficient to batch get all state keys
+		k := ContractStateKey(addr, []byte(postfix))
 		values, errs := f(ctx, [][]byte{k})
 
 		//this allows  contracts to read non-existing state as empty bytes
@@ -112,9 +112,9 @@ func GetContractStateValue(
 	ctx context.Context,
 	im state.Immutable,
 	contractAddress codec.Address,
-	postfix runtime.KeyPostfix,
+	postfix string,
 ) ([]byte, error) {
-	k := ContractStateKey(contractAddress, postfix)
+	k := ContractStateKey(contractAddress, []byte(postfix))
 	val, err := im.GetValue(ctx, k)
 	if errors.Is(err, database.ErrNotFound) {
 		return nil, nil
@@ -126,10 +126,10 @@ func UpdateContractStateFields(
 	ctx context.Context,
 	mu state.Mutable,
 	contractAddress codec.Address,
-	fields map[runtime.KeyPostfix][]byte,
+	fields map[string][]byte,
 ) error {
 	for key, val := range fields {
-		k := ContractStateKey(contractAddress, key)
+		k := ContractStateKey(contractAddress, []byte(key))
 		err := mu.Insert(ctx, k, val)
 		if err != nil {
 			return err

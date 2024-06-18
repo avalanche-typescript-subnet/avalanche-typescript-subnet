@@ -18,11 +18,3 @@ func createActorAddress(actorNumber uint) []byte {
 	copy(actorBytes, actor[:])
 	return actorBytes
 }
-
-// func (d *DummyStateProvider) Print() {
-// 	fmt.Printf("State now has %d entries\n", len(d.State))
-// 	for k, v := range d.State {
-// 		fmt.Printf("%x: %x\n", k, v)
-// 	}
-// 	fmt.Println()
-// }

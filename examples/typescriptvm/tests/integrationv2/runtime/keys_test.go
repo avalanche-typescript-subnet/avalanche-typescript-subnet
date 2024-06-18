@@ -1,6 +1,7 @@
 package runtime_test
 
 import (
+	"encoding/base64"
 	"testing"
 	"time"
 
@@ -40,13 +41,12 @@ func TestWriteKeys(t *testing.T) {
 		string([]byte{4, 0, 6}): {4, 4, 4},
 	}
 
-	require.Equal(t, len(expectedWriteKeys), len(res.Result.UpdatedKeys.Data()), "Updated keys count mismatch")
+	require.Equal(t, len(expectedWriteKeys), len(res.Result.UpdatedKeys), "Updated keys count mismatch")
+	require.Equal(t, expectedWriteKeys, res.Result.UpdatedKeys)
+}
 
-	for k, v := range expectedWriteKeys {
-		value, exists := res.Result.UpdatedKeys.Get([]byte(k))
-		require.True(t, exists)
-		require.Equal(t, v, value)
-	}
+func b64(b []byte) string {
+	return base64.StdEncoding.EncodeToString(b)
 }
 
 func TestReadKeys(t *testing.T) {

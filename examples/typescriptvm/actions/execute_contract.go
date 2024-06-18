@@ -22,11 +22,11 @@ import (
 var _ chain.Action = (*ExecuteContract)(nil)
 
 type ExecuteContract struct {
-	ContractAddress     codec.Address                `json:"contractAddress"`
-	Payload             []byte                       `json:"payload"`
-	FunctionName        string                       `json:"functionName"`
-	Keys                map[string]state.Permissions `json:"stateKeys"`
-	ComputeUnitsToSpend uint64                       `json:"computeUnitsToSpend"`
+	ContractAddress     codec.Address            `json:"contractAddress"`
+	Payload             []byte                   `json:"payload"`
+	FunctionName        string                   `json:"functionName"`
+	Keys                StateKeysWithPermissions `json:"stateKeys"`
+	ComputeUnitsToSpend uint64                   `json:"computeUnitsToSpend"`
 }
 
 func (*ExecuteContract) GetTypeID() uint8 {
@@ -36,7 +36,7 @@ func (*ExecuteContract) GetTypeID() uint8 {
 func (ec *ExecuteContract) StateKeys(actor codec.Address, _ ids.ID) state.Keys {
 	keys := make(state.Keys, len(ec.Keys))
 	for k, v := range ec.Keys {
-		keys[string(storage.ContractStateKey(ec.ContractAddress, k))] = v
+		keys[string(storage.ContractStateKey(ec.ContractAddress, []byte(k)))] = v
 	}
 	keys[string(storage.ContractBytecodeKey(ec.ContractAddress))] = state.Read
 
@@ -51,9 +51,9 @@ func (ec *ExecuteContract) StateKeys(actor codec.Address, _ ids.ID) state.Keys {
 // FIXME: This code was copied from hypersdk/examples/morpheusvm/actions/evm_call.go in the evm-call-experiment branch. It needs testing.
 func (ec *ExecuteContract) StateKeysMaxChunks() []uint16 {
 	output := make([]uint16, 0, len(ec.Keys))
-	for k := range ec.Keys {
-		kBytes := []byte(k)
-		maxChunks := binary.BigEndian.Uint16(kBytes[:len(kBytes)-2])
+	for key := range ec.Keys {
+		keyBytes := []byte(key)
+		maxChunks := binary.BigEndian.Uint16(keyBytes[len(keyBytes)-2:])
 		output = append(output, maxChunks)
 	}
 	return output
@@ -171,30 +171,28 @@ func (*ExecuteContract) ValidRange(chain.Rules) (int64, int64) {
 }
 func marshalKeys(keys map[string]state.Permissions, p *codec.Packer) {
 	p.PackInt(len(keys))
-	keysOrdered := make([]runtime.KeyPostfix, 0, len(keys))
+	keysOrdered := make([][]byte, 0, len(keys))
 	for k := range keys {
-		keysOrdered = append(keysOrdered, k)
+		keysOrdered = append(keysOrdered, []byte(k))
 	}
 	sort.Slice(keysOrdered, func(i, j int) bool {
 		return bytes.Compare(keysOrdered[i][:], keysOrdered[j][:]) < 0
 	})
 
 	for _, k := range keysOrdered { // Iterate over the keys in sorted order
-		p.PackFixedBytes(k[:])    // Serialize the 4-byte KeyPostfix
-		p.PackByte(byte(keys[k])) // Serialize the permissions associated with the key
+		p.PackBytes(k)                    // Serialize the 4-byte KeyPostfix
+		p.PackByte(byte(keys[string(k)])) // Serialize the permissions associated with the key
 	}
 }
 
-func unmarshalKeys(p *codec.Packer) (map[runtime.KeyPostfix]state.Permissions, error) {
+func unmarshalKeys(p *codec.Packer) (StateKeysWithPermissions, error) {
 	numKeys := p.UnpackInt(false)
-	keys := make(map[runtime.KeyPostfix]state.Permissions, numKeys)
+	keys := make(StateKeysWithPermissions, numKeys)
 	for i := 0; i < numKeys; i++ {
-		var keyPostfix runtime.KeyPostfix
-		keyBytes := make([]byte, runtime.KEY_POSTFIX_LENGTH)
-		p.UnpackFixedBytes(int(runtime.KEY_POSTFIX_LENGTH), &keyBytes) // Deserialize the 4-byte KeyPostfix
-		copy(keyPostfix[:], keyBytes)
+		var keyPostfix []byte
+		p.UnpackBytes(10000, false, &keyPostfix) // Deserialize the 4-byte KeyPostfix
 		perm := state.Permissions(p.UnpackByte())
-		keys[keyPostfix] = perm
+		keys[string(keyPostfix)] = perm
 	}
 	return keys, p.Err()
 }
@@ -216,3 +214,5 @@ func unmarshalBytesOrNull(p *codec.Packer, field *[]byte) error {
 	}
 	return p.Err()
 }
+
+type StateKeysWithPermissions map[string]state.Permissions

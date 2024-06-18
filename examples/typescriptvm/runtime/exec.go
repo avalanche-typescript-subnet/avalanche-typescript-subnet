@@ -38,7 +38,7 @@ func NewJavyExec() *JavyExec {
 }
 
 func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
-	state := NewContactStateMap()
+	state := make(map[string][]byte)
 
 	for i := 0; i < 100; i++ { //curcuit breaker
 		res, err := exec.executeOnState(params, state)
@@ -54,11 +54,11 @@ func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 				return nil, fmt.Errorf("error decoding address %s: %v", addrHex, err)
 			}
 
-			newVal, err := params.StateProvider(addressBytes)
+			newVal, err := params.StateProvider(string(addressBytes))
 			if err != nil {
 				return nil, fmt.Errorf("error retrieving state for address %x: %v", addressBytes, err)
 			}
-			state.Set(addressBytes, newVal)
+			state[string(addressBytes)] = newVal
 
 			fmt.Printf("state %+v", state)
 		} else {
@@ -69,7 +69,7 @@ func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 	return nil, fmt.Errorf("execution failed after 100 attempts")
 }
 
-func (exec *JavyExec) executeOnState(params JavyExecParams, state *ContactStateMap) (*JavyExecResult, error) {
+func (exec *JavyExec) executeOnState(params JavyExecParams, state map[string][]byte) (*JavyExecResult, error) {
 	store, mainFunc, err := exec.createStore(params.Bytecode)
 	if err != nil {
 		return nil, err
@@ -83,7 +83,7 @@ func (exec *JavyExec) executeOnState(params JavyExecParams, state *ContactStateM
 	}
 
 	callDataJson, err := json.Marshal(JSPayload{
-		CurrentState: state,
+		CurrentState: &state,
 		Payload:      params.Payload,
 		FunctionName: params.FunctionName,
 		Actor:        params.Actor,
