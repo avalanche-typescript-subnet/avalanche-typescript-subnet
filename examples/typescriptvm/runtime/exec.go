@@ -168,14 +168,14 @@ func (exec *JavyExec) executeOnState(params JavyExecParams, state *ContactStateM
 		return nil, fmt.Errorf("reading stdout file: %v", err)
 	}
 
-	fmt.Printf(">>>>DEBUG stdout>>>\n%s\n<<<<DEBUG stdout<<<<\n", string(stdoutBytes))
+	fmt.Printf("\n>>>>DEBUG stdout>>>\n> %s\n<<<<DEBUG stdout<<<<\n\n", strings.ReplaceAll(string(stdoutBytes), "\n", "\n> "))
 
 	stderrBytes, err := os.ReadFile(stderrFile.Name())
 	if err != nil {
 		return nil, fmt.Errorf("reading stderr file: %v", err)
 	}
 
-	fmt.Printf(">>>>DEBUG stderr>>>\n%s\n<<<<DEBUG stderr<<<<\n", string(stderrBytes))
+	fmt.Printf("\n>>>>DEBUG stderr>>>\n> %s\n<<<<DEBUG stderr<<<<\n\n", strings.ReplaceAll(string(stderrBytes), "\n", "\n> "))
 
 	var stdoutResult ResultJSON
 	err = json.Unmarshal(stdoutBytes, &stdoutResult)

@@ -6,7 +6,6 @@ import (
 
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -35,15 +34,19 @@ func TestWriteKeys(t *testing.T) {
 
 	//check write keys
 	expectedWriteKeys := map[string][]byte{
-		string([]byte{0, 1, 0, 6}): {1, 1, 1}, //starting with slot 1, size is fixed to 6
-		string([]byte{0, 2, 0, 6}): {2, 2, 2},
-		string([]byte{0, 3, 0, 6}): {3, 3, 3},
-		string([]byte{0, 4, 0, 6}): {4, 4, 4},
+		string([]byte{1, 0, 6}): {1, 1, 1}, //starting with slot 1, size is fixed to 6
+		string([]byte{2, 0, 6}): {2, 2, 2},
+		string([]byte{3, 0, 6}): {3, 3, 3},
+		string([]byte{4, 0, 6}): {4, 4, 4},
 	}
 
-	require.Equal(t, expectedWriteKeys, res.Result.UpdatedKeys)
+	require.Equal(t, len(expectedWriteKeys), len(res.Result.UpdatedKeys.Data()), "Updated keys count mismatch")
 
-	assert.Equal(t, len(expectedWriteKeys), len(res.Result.UpdatedKeys.Data()), "Updated keys count mismatch")
+	for k, v := range expectedWriteKeys {
+		value, exists := res.Result.UpdatedKeys.Get([]byte(k))
+		require.True(t, exists)
+		require.Equal(t, v, value)
+	}
 }
 
 func TestReadKeys(t *testing.T) {

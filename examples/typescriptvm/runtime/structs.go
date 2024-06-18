@@ -66,6 +66,7 @@ func (m *ContactStateMap) Set(key []byte, value []byte) {
 
 func (m *ContactStateMap) Get(key []byte) ([]byte, bool) {
 	val, ok := m.data[string(key)]
+
 	return val, ok
 }
 
@@ -81,6 +82,27 @@ func (m *ContactStateMap) MarshalJSON() ([]byte, error) {
 		encodedData[keyBase64] = encodedValue
 	}
 	return json.Marshal(encodedData)
+}
+
+func (m *ContactStateMap) UnmarshalJSON(data []byte) error {
+	var decodedData map[string]string
+	if err := json.Unmarshal(data, &decodedData); err != nil {
+		return err
+	}
+
+	m.data = make(map[string][]byte)
+	for keyBase64, valueBase64 := range decodedData {
+		key, err := base64.StdEncoding.DecodeString(keyBase64)
+		if err != nil {
+			return err
+		}
+		value, err := base64.StdEncoding.DecodeString(valueBase64)
+		if err != nil {
+			return err
+		}
+		m.data[string(key)] = value
+	}
+	return nil
 }
 
 type DummyStateProvider struct {
@@ -103,10 +125,6 @@ func (d *DummyStateProvider) StateProvider(key []byte) ([]byte, error) {
 
 func (d *DummyStateProvider) Update(newVals ContactStateMap) {
 	for k, v := range newVals.data {
-		keyBytes, err := base64.StdEncoding.DecodeString(k)
-		if err != nil {
-			panic(err) // Dummy state provider should never be used in production
-		}
-		d.state.Set(keyBytes, v)
+		d.state.Set([]byte(k), v)
 	}
 }

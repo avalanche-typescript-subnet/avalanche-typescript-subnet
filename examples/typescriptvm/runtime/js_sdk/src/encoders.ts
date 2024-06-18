@@ -26,6 +26,9 @@ export function Uint8ArrayToBase64(uint8Array: Uint8Array): string {
 }
 
 export function Base64ToUint8Array(base64String: string): Uint8Array {
+    if (!base64String) {
+        return new Uint8Array();
+    }
     let str = base64String.replace(/=+$/, ''); // Remove padding characters
     let bytes = [];
 
