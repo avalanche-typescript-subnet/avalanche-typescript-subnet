@@ -1,11 +1,10 @@
 package runtime
 
 import (
-	"encoding/binary"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -39,7 +38,7 @@ func NewJavyExec() *JavyExec {
 }
 
 func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
-	var state map[KeyPostfix][]byte = make(map[KeyPostfix][]byte)
+	state := make(map[string][]byte)
 
 	for i := 0; i < 100; i++ { //curcuit breaker
 		res, err := exec.executeOnState(params, state)
@@ -50,19 +49,17 @@ func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 		if strings.Contains(res.Result.Error, "NO_VALUE_AT_ADDRESS") {
 			addrHex := strings.Split(res.Result.Error, "\"")[1]
 
-			var address KeyPostfix
-			// Remove the "0x" prefix if present
-			cleanedAddrHex := strings.TrimPrefix(addrHex, "0x")
-			value, err := strconv.ParseUint(cleanedAddrHex, 16, 32)
+			addressBytes, err := hex.DecodeString(strings.TrimPrefix(addrHex, "0x"))
 			if err != nil {
-				return nil, fmt.Errorf("invalid address hex string: %v", err)
+				return nil, fmt.Errorf("error decoding address %s: %v", addrHex, err)
 			}
-			binary.BigEndian.PutUint32(address[:], uint32(value))
 
-			state[address], err = params.StateProvider(address)
+			newVal, err := params.StateProvider(string(addressBytes))
 			if err != nil {
-				return nil, fmt.Errorf("error retrieving state for address %x: %v", address, err)
+				return nil, fmt.Errorf("error retrieving state for address %x: %v", addressBytes, err)
 			}
+			state[string(addressBytes)] = newVal
+
 			fmt.Printf("state %+v", state)
 		} else {
 			return res, nil
@@ -72,7 +69,7 @@ func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 	return nil, fmt.Errorf("execution failed after 100 attempts")
 }
 
-func (exec *JavyExec) executeOnState(params JavyExecParams, state map[KeyPostfix][]byte) (*JavyExecResult, error) {
+func (exec *JavyExec) executeOnState(params JavyExecParams, state map[string][]byte) (*JavyExecResult, error) {
 	store, mainFunc, err := exec.createStore(params.Bytecode)
 	if err != nil {
 		return nil, err
@@ -85,12 +82,12 @@ func (exec *JavyExec) executeOnState(params JavyExecParams, state map[KeyPostfix
 		defer store.Close()
 	}
 
-	callDataJson, err := JSPayload{
-		CurrentState: state,
+	callDataJson, err := json.Marshal(JSPayload{
+		CurrentState: &state,
 		Payload:      params.Payload,
 		FunctionName: params.FunctionName,
 		Actor:        params.Actor,
-	}.MarshalJSON()
+	})
 
 	if err != nil {
 		return nil, fmt.Errorf("marshalling call data: %v", err)
@@ -171,14 +168,14 @@ func (exec *JavyExec) executeOnState(params JavyExecParams, state map[KeyPostfix
 		return nil, fmt.Errorf("reading stdout file: %v", err)
 	}
 
-	fmt.Printf(">>>>DEBUG stdout>>>\n%s\n<<<<DEBUG stdout<<<<\n", string(stdoutBytes))
+	fmt.Printf("\n>>>>DEBUG stdout>>>\n> %s\n<<<<DEBUG stdout<<<<\n\n", strings.ReplaceAll(string(stdoutBytes), "\n", "\n> "))
 
 	stderrBytes, err := os.ReadFile(stderrFile.Name())
 	if err != nil {
 		return nil, fmt.Errorf("reading stderr file: %v", err)
 	}
 
-	fmt.Printf(">>>>DEBUG stderr>>>\n%s\n<<<<DEBUG stderr<<<<\n", string(stderrBytes))
+	fmt.Printf("\n>>>>DEBUG stderr>>>\n> %s\n<<<<DEBUG stderr<<<<\n\n", strings.ReplaceAll(string(stderrBytes), "\n", "\n> "))
 
 	var stdoutResult ResultJSON
 	err = json.Unmarshal(stdoutBytes, &stdoutResult)

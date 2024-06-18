@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/ava-labs/hypersdk/codec"
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 	"github.com/ava-labs/hypersdk/state"
 	"github.com/stretchr/testify/require"
 )
@@ -84,8 +83,8 @@ func TestExecuteContractSerialization(t *testing.T) {
 			action: ExecuteContract{
 				ContractAddress: testAddress,
 				Payload:         nil,
-				Keys: map[runtime.KeyPostfix]state.Permissions{
-					{0x01, 0x02, 0x03, 0x04}: state.Read,
+				Keys: map[string]state.Permissions{
+					string([]byte{0x01, 0x02, 0x03, 0x04}): state.Read,
 				},
 				ComputeUnitsToSpend: 0,
 				FunctionName:        "",
@@ -96,11 +95,11 @@ func TestExecuteContractSerialization(t *testing.T) {
 			action: ExecuteContract{
 				ContractAddress: testAddress,
 				Payload:         []byte("payload"),
-				Keys: map[runtime.KeyPostfix]state.Permissions{
-					{0x01, 0x02, 0x03, 0x04}: state.Read | state.Write,
-					{0x05, 0x06, 0x07, 0x08}: state.Write,
-					{0x09, 0x0a, 0x0b, 0x0c}: state.Allocate,
-					{0x0d, 0x0e, 0x0f, 0x10}: state.All,
+				Keys: map[string]state.Permissions{
+					string([]byte{0x01, 0x02, 0x03, 0x04}): state.Read | state.Write,
+					string([]byte{0x05, 0x06, 0x07, 0x08}): state.Write,
+					string([]byte{0x09, 0x0a, 0x0b, 0x0c}): state.Allocate,
+					string([]byte{0x0d, 0x0e, 0x0f, 0x10}): state.All,
 				},
 				ComputeUnitsToSpend: 999888777,
 				FunctionName:        "functionName2",

@@ -12,7 +12,7 @@ import (
 
 func TestReturn(t *testing.T) {
 	exec := runtime.NewJavyExec()
-	stateProvider := &DummyStateProvider{State: map[runtime.KeyPostfix][]byte{}}
+	stateProvider := runtime.NewDummyStateProvider()
 
 	actor1Bytes := createActorAddress(1)
 	actor2Bytes := createActorAddress(2)
@@ -39,11 +39,8 @@ func TestReturn(t *testing.T) {
 		require.Equal(t, true, res.Result.Success)
 
 		fmt.Printf("UpdatedKeys: %v\n", res.Result.UpdatedKeys)
-		for updatedKey, updatedVal := range res.Result.UpdatedKeys {
-			stateProvider.SetState(updatedKey, updatedVal)
-		}
+		stateProvider.Update(res.Result.UpdatedKeys)
 	}
-	stateProvider.Print()
 
 	//execute 1 time for actor 2
 	params.Actor = actor2Bytes
@@ -51,9 +48,7 @@ func TestReturn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for updatedKey, updatedVal := range res.Result.UpdatedKeys {
-		stateProvider.SetState(updatedKey, updatedVal)
-	}
+	stateProvider.Update(res.Result.UpdatedKeys)
 
 	//get result for actor 1
 	params.Payload = []byte{}
@@ -64,9 +59,7 @@ func TestReturn(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for updatedKey, updatedVal := range res.Result.UpdatedKeys {
-		stateProvider.SetState(updatedKey, updatedVal)
-	}
+	stateProvider.Update(res.Result.UpdatedKeys)
 
 	//check result for actor 1
 	var actor1FinalBalance uint32

@@ -26,6 +26,9 @@ export function Uint8ArrayToBase64(uint8Array: Uint8Array): string {
 }
 
 export function Base64ToUint8Array(base64String: string): Uint8Array {
+    if (!base64String) {
+        return new Uint8Array();
+    }
     let str = base64String.replace(/=+$/, ''); // Remove padding characters
     let bytes = [];
 
@@ -84,4 +87,27 @@ export function HexStringToUint8Array(hexString: string): Uint8Array {
 
 export function Uint8ArrayToHex(uint8Array: Uint8Array): string {
     return "0x" + uint8Array.reduce((str, byte) => str + byte.toString(16).padStart(2, '0'), '');
+}
+
+export function BigintToUint8Array(bigint: bigint): Uint8Array {
+    // Get the byte length of the BigInt
+    let byteLength = (bigint.toString(16).length + 1) >> 1;
+    let array = new Uint8Array(byteLength);
+
+    // Fill the Uint8Array with the bytes of the BigInt
+    for (let i = 0; i < byteLength; i++) {
+        array[byteLength - i - 1] = Number((bigint >> BigInt(i * 8)) & BigInt(0xff));
+    }
+
+    return array;
+}
+
+export function Uint8ArrayToBigint(array: Uint8Array): bigint {
+    let bigint = BigInt(0);
+
+    for (let i = 0; i < array.length; i++) {
+        bigint = (bigint << BigInt(8)) + BigInt(array[i]);
+    }
+
+    return bigint;
 }

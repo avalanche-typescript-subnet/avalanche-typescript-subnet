@@ -117,13 +117,13 @@ type ExecuteContractArgs struct {
 }
 
 type ExecuteContractReply struct {
-	DebugLog          string    `json:"debugLog"`
-	Result            []byte    `json:"result"`
-	Success           bool      `json:"success"`
-	Error             string    `json:"error"`
-	UpdatedKeys       [][4]byte `json:"updatedKeys"`
-	ReadKeys          [][4]byte `json:"readKeys"`
-	ComputeUnitsSpent uint64    `json:"computeUnitsSpent"`
+	DebugLog          string   `json:"debugLog"`
+	Result            []byte   `json:"result"`
+	Success           bool     `json:"success"`
+	Error             string   `json:"error"`
+	UpdatedKeys       [][]byte `json:"updatedKeys"`
+	ReadKeys          [][]byte `json:"readKeys"`
+	ComputeUnitsSpent uint64   `json:"computeUnitsSpent"`
 }
 
 func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContractArgs, reply *ExecuteContractReply) error {
@@ -151,14 +151,14 @@ func (j *JSONRPCServer) ExecuteContract(req *http.Request, args *ExecuteContract
 	reply.Error = res.Result.Error
 
 	// Convert each [4]byte to KeyPostfix and assign to reply.ReadKeys
-	reply.ReadKeys = make([][4]byte, 0, len(res.Result.ReadKeys))
+	reply.ReadKeys = make([][]byte, 0, len(res.Result.ReadKeys))
 	for _, key := range res.Result.ReadKeys {
-		reply.ReadKeys = append(reply.ReadKeys, [4]byte(key))
+		reply.ReadKeys = append(reply.ReadKeys, []byte(key))
 	}
 
-	reply.UpdatedKeys = make([][4]byte, 0, len(res.Result.UpdatedKeys))
+	reply.UpdatedKeys = make([][]byte, 0, len(res.Result.UpdatedKeys))
 	for key := range res.Result.UpdatedKeys {
-		reply.UpdatedKeys = append(reply.UpdatedKeys, [4]byte(key))
+		reply.UpdatedKeys = append(reply.UpdatedKeys, []byte(key))
 	}
 
 	reply.ComputeUnitsSpent = res.FuelConsumed / 1_000_000 // TODO: move to consts
