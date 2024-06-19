@@ -6,8 +6,10 @@ CACHE_DIR=${HOME}/.cache/javy-callback
 TEMP_DIR=/tmp
 VERSION=v3.0.0-callback
 OS=`uname -s`
+OS=${OS,,}
 
 ARCH=`uname -i`
+ARCH=${ARCH,,}
 
 [ ${ARCH} == 'aarch64' ] &&  ARCH="arm"
 
@@ -23,16 +25,16 @@ EOT
 }
 
 checkCache () {
-    [ ! -d ${CACHE_DIR} ] && mkdir -p ${CACHE_DIR} && echo "need to download javy" && exit
-    [ ! -f ${CACHE_DIR}/${EXECUTABLE} ] && echo "need to download javy" && exit
+    [ ! -d ${CACHE_DIR} ] && mkdir -p ${CACHE_DIR} && echo "need to download javy" && return
+    [ ! -f ${CACHE_DIR}/${EXECUTABLE} ] && echo "need to download javy" && return
 }
 
 downloadJavy () {
   tmpfile=$(mktemp  ${TEMP_DIR}/tmp.XXXXXXXXXX.gz)
-  curl -q -L -o ${tmpfile} ${URL}
-  [ $? -ne 0 ] && echo "could not download javy" && exit 
+  curl -s -L -o ${tmpfile} ${URL}
+  [ $? -ne 0 ] && echo "could not download javy" && return
   gzip -d ${tmpfile}
-  [ $? -ne 0 ] && echo "could not download javy" && exit
+  [ $? -ne 0 ] && echo "could not download javy" && return
   mv ${tmpfile%.gz} ${CACHE_DIR}/${EXECUTABLE}
   chmod +x ${CACHE_DIR}/${EXECUTABLE}
   rm -f ${tmpfile%.gz}
@@ -40,6 +42,7 @@ downloadJavy () {
 
 getJavy () {
 if [ "`checkCache`" = "need to download javy" ]; then
+  echo "downloading javy"
   [ "`downloadJavy`" = "could not download javy" ] && echo "could not download javy" && exit 1
 fi 
 }
@@ -49,7 +52,7 @@ fi
 
 case $1 in
   compile)
-        getJavy 
+        [ "`getJavy`" = "could not download javy" ] && echo "could not download javy" && exit 1
         shift 1
         _tsfile=$1
 
@@ -59,8 +62,6 @@ case $1 in
 
         _jsfile=${_tsfile%.*}.temp.js
         _wasmfile=${2:- ${_tsfile%.*}.wasm}
-
-        echo "Compiling \"$_tsfile\" to \"$_jsfile\" and \"$_wasmfile\""
 
         npx esbuild ${_tsfile} --bundle --outfile=${_jsfile} --target=es2020 --format=esm
         #convert path to absolute
