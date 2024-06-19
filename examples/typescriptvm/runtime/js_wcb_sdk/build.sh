@@ -1,18 +1,55 @@
-#!/bin/sh
+#!/bin/bash
+
+set -e
+
+CACHE_DIR=${HOME}/.cache/javy-callback
+TEMP_DIR=/tmp
+VERSION=v3.0.0-callback
+OS=`uname -s`
+
+ARCH=`uname -i`
+
+[ ${ARCH} == 'aarch64' ] &&  ARCH="arm"
+
+EXECUTABLE="javy-${ARCH}-${OS}-${VERSION}"
+URL="https://github.com/crrrazyden/javy/releases/download/${VERSION}/javy-${ARCH}-${OS}-${VERSION}.gz"
 
 printUsage () {
     cat << EOT
 Usage: $0 compile [ts-file] [optional wasm-file]
        $0 emit-provider [wasm-file]
-       $0 build
 
 EOT
 }
+
+checkCache () {
+    [ ! -d ${CACHE_DIR} ] && mkdir -p ${CACHE_DIR} && echo "need to download javy" && exit
+    [ ! -f ${CACHE_DIR}/${EXECUTABLE} ] && echo "need to download javy" && exit
+}
+
+downloadJavy () {
+  tmpfile=$(mktemp  ${TEMP_DIR}/tmp.XXXXXXXXXX.gz)
+  curl -q -L -o ${tmpfile} ${URL}
+  [ $? -ne 0 ] && echo "could not download javy" && exit 
+  gzip -d ${tmpfile}
+  [ $? -ne 0 ] && echo "could not download javy" && exit
+  mv ${tmpfile%.gz} ${CACHE_DIR}/${EXECUTABLE}
+  chmod +x ${CACHE_DIR}/${EXECUTABLE}
+  rm -f ${tmpfile%.gz}
+}
+
+getJavy () {
+if [ "`checkCache`" = "need to download javy" ]; then
+  [ "`downloadJavy`" = "could not download javy" ] && echo "could not download javy" && exit 1
+fi 
+}
+
 
 ( [ $# -eq 0 ] || [ $# -gt 3 ] ) && printUsage && exit 1
 
 case $1 in
   compile)
+        getJavy 
         shift 1
         _tsfile=$1
 
@@ -35,13 +72,15 @@ case $1 in
 
         cp ${_jsfile} ${temp_js_name}
 
-        docker run --rm -v ./:/out javy-callback:latest compile -d /out/${temp_js_name} -o /out/${temp_wasm_name}
+        #docker run --rm -v ./:/out javy-callback:latest compile -d /out/${temp_js_name} -o /out/${temp_wasm_name}
+        ${CACHE_DIR}/${EXECUTABLE} compile -d ${temp_js_name} -o ${temp_wasm_name}
 
         cp ${temp_wasm_name} ${_wasmfile}
         rm -f ${temp_js_name}
         rm -f ${temp_wasm_name}
     ;;
   emit-provider)
+        getJavy
         _wasmfile=$2
 
         [ -z ${_wasmfile} ] && echo "Error: missing a target wasm file" && printUsage && exit 1; 
@@ -50,15 +89,15 @@ case $1 in
 
         path=$(readlink -e $_wasmfile)
         path=${path%/*}
+        path=${path:-.}
         filename=${_wasmfile##*/}
 
-        docker run --rm -v ${path}:/out javy-callback:latest emit-provider -o /out/${filename}
+        #docker run --rm -v ${path}:/out javy-callback:latest emit-provider -o /out/${filename}
+        ${CACHE_DIR}/${EXECUTABLE} emit-provider -o ${path}/${filename}
 
-        #clear cache
-        rm -f ${HOME}/.cache/*.cwasm
     ;;
-  build)
-        docker inspect javy-callback:latest 1>/dev/null 2>/dev/null || docker build -t javy-callback:latest ./../../../runtime/js_wcb_sdk
+  clean)
+          rm -rf ${CACHE_DIR}
     ;;
   *)
     echo "Unknown command: $1"

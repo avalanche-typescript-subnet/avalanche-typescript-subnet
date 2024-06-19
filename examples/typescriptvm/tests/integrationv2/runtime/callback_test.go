@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//go:generate ../../../runtime/js_wcb_sdk/build.sh build
 //go:generate ../../../runtime/js_wcb_sdk/build.sh compile assets/callback_test.ts
 //go:generate ../../../runtime/js_wcb_sdk/build.sh emit-provider ../../../runtime/javy_provider.wasm
 
