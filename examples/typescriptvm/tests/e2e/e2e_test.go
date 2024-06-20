@@ -327,6 +327,8 @@ var _ = ginkgo.BeforeSuite(func() {
 		require.NoError(err)
 		nodeID, err := ids.NodeIDFromString(info.GetId())
 		require.NoError(err)
+		err = os.WriteFile(".morpheus-cli/nodeUrl.txt", []byte(u), 0644)
+		require.NoError(err)
 		cli := rpc.NewJSONRPCClient(u)
 
 		// After returning healthy, the node may not respond right away
