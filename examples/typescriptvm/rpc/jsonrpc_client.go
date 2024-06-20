@@ -10,6 +10,7 @@ import (
 	"github.com/ava-labs/avalanchego/ids"
 
 	_ "github.com/ava-labs/hypersdk/examples/typescriptvm/registry" // ensure registry populated
+	"github.com/ava-labs/hypersdk/state"
 
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/consts"
@@ -156,4 +157,63 @@ func (cli *JSONRPCClient) Parser(ctx context.Context) (chain.Parser, error) {
 		return nil, err
 	}
 	return &Parser{cli.networkID, cli.chainID, g}, nil
+}
+
+func (cli *JSONRPCClient) ContractBytecode(ctx context.Context, addr string) ([]byte, error) {
+	resp := new(ContractBytecodeReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"contractBytecode",
+		&ContractBytecodeArgs{
+			Address: addr,
+		},
+		resp,
+	)
+	return resp.Bytecode, err
+}
+
+type ExecuteContractClientReply struct {
+	DebugLog          string
+	Result            []byte
+	Success           bool
+	Error             string
+	Keys              map[string]state.Permissions
+	ComputeUnitsSpent uint64
+}
+
+func (cli *JSONRPCClient) ExecuteContract(ctx context.Context, addr string, funcName string, input []byte, actor string) (ExecuteContractClientReply, error) {
+	originalResp := new(ExecuteContractReply)
+	err := cli.requester.SendRequest(
+		ctx,
+		"executeContract",
+		&ExecuteContractArgs{
+			ContractAddress: addr,
+			Payload:         input,
+			FunctionName:    funcName,
+			Actor:           actor,
+		},
+		originalResp,
+	)
+
+	resp := new(ExecuteContractClientReply)
+	resp.DebugLog = originalResp.DebugLog
+	resp.Result = originalResp.Result
+	resp.Success = originalResp.Success
+	resp.Error = originalResp.Error
+	resp.ComputeUnitsSpent = originalResp.ComputeUnitsSpent
+
+	resp.Keys = make(map[string]state.Permissions)
+
+	for _, key := range originalResp.ReadKeys {
+		resp.Keys[string(key)] = state.Read
+	}
+	for _, key := range originalResp.UpdatedKeys {
+		if _, hadRead := (resp.Keys)[string(key)]; !hadRead {
+			resp.Keys[string(key)] = state.Write | state.Allocate
+		} else {
+			resp.Keys[string(key)] = state.Write | state.Allocate | state.Read
+		}
+	}
+
+	return *resp, err
 }
