@@ -20,6 +20,7 @@ var callbackTestWasmBytes []byte
 func TestCallback(t *testing.T) {
 
 	exec := runtime.NewJavyExec()
+
 	stateprovider := runtime.NewDummyStateProvider()
 
 	lengthSrcArgs := 1024
@@ -33,17 +34,6 @@ func TestCallback(t *testing.T) {
 
 	//payload[0] = byte(0) //return an array with length = 1
 	payload[0] = byte(1) //return an array with length = lengthRes
-
-	params := runtime.JavyExecParams{
-		MaxFuel:       10 * 1000 * 1000 * 100000, //a large amount of fuel
-		MaxTime:       time.Second * 100,         //100 seconds
-		MaxMemory:     -1,                        // no limit
-		Bytecode:      &callbackTestWasmBytes,
-		StateProvider: stateprovider.StateProvider,
-		Payload:       payload,
-		FunctionName:  "test_callback",
-	}
-
 	var dst []byte
 	//define callback function
 	var callback runtime.CallbackFunc = func(src []byte) ([]byte, error) {
@@ -57,9 +47,18 @@ func TestCallback(t *testing.T) {
 		}
 		return dst, nil
 	}
+	exec.SetCallbackFunc(callback)
 
-	// registering the callback
-	runtime.SetCallbackFunc(callback)
+	params := runtime.JavyExecParams{
+		MaxFuel:       10 * 1000 * 1000 * 100000, //a large amount of fuel
+		MaxTime:       time.Second * 100,         //100 seconds
+		MaxMemory:     -1,                        // no limit
+		Bytecode:      &callbackTestWasmBytes,
+		StateProvider: stateprovider.StateProvider,
+		Payload:       payload,
+		FunctionName:  "test_callback",
+		Callback:      callback,
+	}
 
 	for n := 0; n < repeatNum; n++ {
 

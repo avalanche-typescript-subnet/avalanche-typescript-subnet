@@ -1,8 +1,10 @@
 package runtime_test
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -27,6 +29,24 @@ func TestReturn(t *testing.T) {
 		Payload:       []byte{7},
 		FunctionName:  "increment",
 	}
+
+	var callback runtime.CallbackFunc = func(address []byte) ([]byte, error) {
+		addrHex := string(address)
+
+		addressBytes, err := hex.DecodeString(strings.TrimPrefix(addrHex, "0x"))
+		if err != nil {
+			return nil, fmt.Errorf("error decoding address %s: %v", addrHex, err)
+		}
+
+		fmt.Println("addressBytes", string(addressBytes))
+		newVal, err := stateProvider.StateProvider(string(addressBytes))
+		if err != nil {
+			return nil, fmt.Errorf("error retrieving state for address %x: %v", addressBytes, err)
+		}
+		return newVal, nil
+	}
+
+	exec.SetCallbackFunc(callback)
 
 	//execute 2 times for actor 1
 	params.Actor = actor1Bytes

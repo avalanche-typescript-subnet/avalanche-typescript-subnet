@@ -51,6 +51,7 @@ registerFunc("readManySlots", (payload: Uint8Array, _actor: Uint8Array, getBytes
         tempResult.set(fromSlot, result.length);
         result = tempResult;
     }
+    console.log(result)
     return result;
 })
 

@@ -1,7 +1,6 @@
 package runtime
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -25,6 +24,7 @@ type JavyExec struct {
 		store    *wasmtime.Store
 		mainFunc *wasmtime.Func
 	}
+	callback CallbackFunc
 }
 
 func NewJavyExec() *JavyExec {
@@ -34,39 +34,19 @@ func NewJavyExec() *JavyExec {
 			store    *wasmtime.Store
 			mainFunc *wasmtime.Func
 		}{},
+		callback: EmptyCallbackFunc,
 	}
 }
 
 func (exec *JavyExec) Execute(params JavyExecParams) (*JavyExecResult, error) {
 	state := make(map[string][]byte)
 
-	for i := 0; i < 100; i++ { //curcuit breaker
-		res, err := exec.executeOnState(params, state)
-		if err != nil {
-			return nil, err
-		}
-
-		if strings.Contains(res.Result.Error, "NO_VALUE_AT_ADDRESS") {
-			addrHex := strings.Split(res.Result.Error, "\"")[1]
-
-			addressBytes, err := hex.DecodeString(strings.TrimPrefix(addrHex, "0x"))
-			if err != nil {
-				return nil, fmt.Errorf("error decoding address %s: %v", addrHex, err)
-			}
-
-			newVal, err := params.StateProvider(string(addressBytes))
-			if err != nil {
-				return nil, fmt.Errorf("error retrieving state for address %x: %v", addressBytes, err)
-			}
-			state[string(addressBytes)] = newVal
-
-			fmt.Printf("state %+v", state)
-		} else {
-			return res, nil
-		}
+	res, err := exec.executeOnState(params, state)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, fmt.Errorf("execution failed after 100 attempts")
+	return res, nil
 }
 
 func (exec *JavyExec) executeOnState(params JavyExecParams, state map[string][]byte) (*JavyExecResult, error) {

@@ -36,7 +36,15 @@ class TracebleDB {
         this._reads.add(address);
 
         if (!this._state[address]) {
-            throw new Error(`NO_VALUE_AT_ADDRESS="${address}"`)
+            try {
+                let res = callback(new TextEncoder().encode(address))
+                return res
+            } catch (e) {
+                if (e instanceof Error && e.message === "result address is null") {
+                    return new Uint8Array()
+                }
+                throw e
+            }
         }
 
         return this._state[address];

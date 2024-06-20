@@ -57,48 +57,48 @@ func (exec *JavyExec) createStore(wasmBytes *[]byte) (*wasmtime.Store, *wasmtime
 	var memory *wasmtime.Memory
 	var realloc_fn *wasmtime.Func
 
-	if callback != nil {
-		err = linker.DefineFunc(store, "env", "__callback", func(argPorinter int32, argLen int32) int64 {
-			pack := func(a int32, b int32) int64 {
-				return int64(a)<<32 | int64(b)
-			}
+	err = linker.DefineFunc(store, "env", "__callback", func(argPorinter int32, argLen int32) int64 {
+		pack := func(a int32, b int32) int64 {
+			return int64(a)<<32 | int64(b)
+		}
 
-			wasmMem := memory.UnsafeData(store)
-			arg := wasmMem[int(argPorinter) : int(argPorinter)+int(argLen)]
+		wasmMem := memory.UnsafeData(store)
+		arg := wasmMem[int(argPorinter) : int(argPorinter)+int(argLen)]
 
-			res, err := callback(arg)
-			if err != nil {
-				fmt.Println("callback call error:", err)
-				return 0
-			}
+		res, err := exec.callback(arg)
+		if err != nil {
+			fmt.Println("callback call error:", err)
+			return 0
+		}
 
-			if res == nil {
-				res = []byte{}
-			}
+		if res == nil {
+			return 0
+		}
 
-			_dstPointer, err := realloc_fn.Call(store, int32(0), int32(0), int32(1), int32(len(res)))
-			if err != nil {
-				fmt.Println("realloc_fn call error:", err)
-				return 0
-			}
-			wasmMem = memory.UnsafeData(store)
-			dstPointer, ok := _dstPointer.(int32)
-			if !ok {
-				fmt.Println("dstPointer type error:", err)
-				return 0
-			}
+		if len(res) == 0 {
+			return 0
+		}
 
-			size := copy(wasmMem[dstPointer:], res)
-			if size != len(res) {
-				fmt.Println("copy error: copied only", size, "of", len(res))
-				return 0
-			}
+		_dstPointer, err := realloc_fn.Call(store, int32(0), int32(0), int32(1), int32(len(res)))
+		if err != nil {
+			fmt.Println("realloc_fn call error:", err)
+			return 0
+		}
+		wasmMem = memory.UnsafeData(store)
+		dstPointer, ok := _dstPointer.(int32)
+		if !ok {
+			fmt.Println("dstPointer type error:", err)
+			return 0
+		}
 
-			return pack(dstPointer, int32(len(res)))
-		})
-	} else {
-		err = linker.DefineFunc(store, "env", "__callback", _emptyCallbackFunc)
-	}
+		size := copy(wasmMem[dstPointer:], res)
+		if size != len(res) {
+			fmt.Println("copy error: copied only", size, "of", len(res))
+			return 0
+		}
+
+		return pack(dstPointer, int32(len(res)))
+	})
 
 	if err != nil {
 		fmt.Println("defining callback func wrapper:", err)

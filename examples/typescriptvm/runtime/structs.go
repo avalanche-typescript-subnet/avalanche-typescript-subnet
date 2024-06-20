@@ -17,6 +17,7 @@ type JavyExecParams struct {
 	Payload       []byte
 	FunctionName  string
 	Actor         []byte
+	Callback      CallbackFunc
 }
 
 // payload

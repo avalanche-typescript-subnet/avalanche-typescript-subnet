@@ -62,7 +62,7 @@ case $1 in
         _wasmfile=${2:- ${_tsfile%.*}.wasm}
 
         npx esbuild ${_tsfile} --bundle --outfile=${_jsfile} --target=es2020 --format=esm
-         [ $? -ne 0 ] && echo "npx esbuild erro" && exit 1
+         [ $? -ne 0 ] && echo "npx esbuild errox" && exit 1
         #convert path to absolute
         tsfile=$(readlink -e $_tsfile)
         [ $? -ne 0 ] && echo "Could not find \"${_tsfile}\""  && exit 1
