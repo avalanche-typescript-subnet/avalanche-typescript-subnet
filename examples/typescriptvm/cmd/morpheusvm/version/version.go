@@ -16,7 +16,7 @@ func init() {
 	cobra.EnablePrefixMatching = true
 }
 
-// NewCommand implements "typescriptvm version" command.
+// NewCommand implements "morpheusvm version" command.
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "version",

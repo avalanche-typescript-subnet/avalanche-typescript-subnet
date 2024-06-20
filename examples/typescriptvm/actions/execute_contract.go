@@ -48,7 +48,7 @@ func (ec *ExecuteContract) StateKeys(actor codec.Address, _ ids.ID) state.Keys {
 	return keys
 }
 
-// FIXME: This code was copied from hypersdk/examples/morpheusvm/actions/evm_call.go in the evm-call-experiment branch. It needs testing.
+// FIXME: This code was copied from hypersdk/examples/typescriptvm/actions/evm_call.go in the evm-call-experiment branch. It needs testing.
 func (ec *ExecuteContract) StateKeysMaxChunks() []uint16 {
 	output := make([]uint16, 0, len(ec.Keys))
 	for key := range ec.Keys {

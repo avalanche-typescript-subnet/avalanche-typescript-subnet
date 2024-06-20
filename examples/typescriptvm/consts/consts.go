@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	HRP      = "typescript"
-	Name     = "typescriptvm"
+	HRP      = "morpheus"
+	Name     = "morpheusvm"
 	Symbol   = "RED"
 	Decimals = 9
 )

@@ -3,4 +3,4 @@
 
 package rpc
 
-const JSONRPCEndpoint = "/typescriptapi"
+const JSONRPCEndpoint = "/morpheusapi"

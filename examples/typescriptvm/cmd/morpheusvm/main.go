@@ -13,14 +13,14 @@ import (
 	"github.com/ava-labs/avalanchego/vms/rpcchainvm"
 	"github.com/spf13/cobra"
 
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/cmd/typescriptvm/version"
+	"github.com/ava-labs/hypersdk/examples/typescriptvm/cmd/morpheusvm/version"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/controller"
 )
 
 var rootCmd = &cobra.Command{
-	Use:        "typescriptvm",
+	Use:        "morpheusvm",
 	Short:      "BaseVM agent",
-	SuggestFor: []string{"typescriptvm"},
+	SuggestFor: []string{"morpheusvm"},
 	RunE:       runFunc,
 }
 
@@ -36,7 +36,7 @@ func init() {
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintf(os.Stderr, "typescriptvm failed %v\n", err)
+		fmt.Fprintf(os.Stderr, "morpheusvm failed %v\n", err)
 		os.Exit(1)
 	}
 	os.Exit(0)
