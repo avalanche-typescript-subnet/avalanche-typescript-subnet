@@ -19,7 +19,6 @@ export class TsChainClient {
         });
 
         const json = await response.json();
-        console.log('json', json)
         return BigInt(json.result.amount);
     }
 }
