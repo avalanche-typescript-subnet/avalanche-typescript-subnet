@@ -38,7 +38,6 @@ func TestReturn(t *testing.T) {
 			return nil, fmt.Errorf("error decoding address %s: %v", addrHex, err)
 		}
 
-		fmt.Println("addressBytes", string(addressBytes))
 		newVal, err := stateProvider.StateProvider(string(addressBytes))
 		if err != nil {
 			return nil, fmt.Errorf("error retrieving state for address %x: %v", addressBytes, err)
