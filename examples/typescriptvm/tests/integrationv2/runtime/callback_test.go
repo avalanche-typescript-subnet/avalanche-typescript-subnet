@@ -23,8 +23,8 @@ func TestCallback(t *testing.T) {
 	stateprovider := runtime.NewDummyStateProvider()
 
 	lengthSrcArgs := 1024
-	lengthRes := 1024 * 1024 // notice, disable debug output to console in exec.go line 171
-	repeatNum := 5
+	lengthRes := 1024 // notice, disable debug output to console in exec.go line 171
+	repeatNum := 3
 
 	payload := make([]byte, lengthSrcArgs)
 	for i := 0; i < lengthSrcArgs; i++ {

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 CACHE_DIR=${HOME}/.cache/javy-callback
 TEMP_DIR=/tmp
 VERSION=v3.0.0-callback
@@ -64,9 +62,10 @@ case $1 in
         _wasmfile=${2:- ${_tsfile%.*}.wasm}
 
         npx esbuild ${_tsfile} --bundle --outfile=${_jsfile} --target=es2020 --format=esm
+         [ $? -ne 0 ] && echo "npx esbuild erro" && exit 1
         #convert path to absolute
         tsfile=$(readlink -e $_tsfile)
-        [ $? -ne 0 ] && echo "Could not find \"${_tsfile}\"" && exit 1
+        [ $? -ne 0 ] && echo "Could not find \"${_tsfile}\""  && exit 1
 
         temp_js_name=$(mktemp -p ./)
         temp_wasm_name=$(mktemp -p ./)
