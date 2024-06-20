@@ -9,7 +9,7 @@
 
 _[Who is Morpheus ("The Matrix")?](https://www.youtube.com/watch?v=zE7PKRjrid4)_
 
-The [`morpheusvm`](./examples/morpheusvm) provides the first glimpse into the world of the `hypersdk`.
+The [`morpheusvm`](./examples/typescriptvm) provides the first glimpse into the world of the `hypersdk`.
 After learning how to implement native token transfers in a `hypervm` (one of the simplest Custom VMs
 you could make), you will have the choice to go deeper (red pill) or to turn back to the VMs that you
 already know (blue pill).
