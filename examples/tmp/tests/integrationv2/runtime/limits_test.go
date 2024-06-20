@@ -104,9 +104,10 @@ func TestMaxMemory(t *testing.T) {
 		{23 * MEMORY_PAGE_64KB, []byte{0x20}, true},
 		{23 * MEMORY_PAGE_64KB, []byte{0x26}, true},
 		{23 * MEMORY_PAGE_64KB, []byte{0x27}, false},
-		{24 * MEMORY_PAGE_64KB, []byte{0x27}, false},
-		{25 * MEMORY_PAGE_64KB, []byte{0x27}, true},
+		{24 * MEMORY_PAGE_64KB, []byte{0x27}, true},
+		//...
 		{25 * MEMORY_PAGE_64KB, []byte{0x29}, true},
+		{25 * MEMORY_PAGE_64KB, []byte{0x30}, false},
 	}
 
 	for _, tc := range testCases {
