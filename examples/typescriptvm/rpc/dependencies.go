@@ -11,7 +11,6 @@ import (
 
 	"github.com/ava-labs/hypersdk/codec"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/genesis"
-	"github.com/ava-labs/hypersdk/examples/typescriptvm/runtime"
 	"github.com/ava-labs/hypersdk/fees"
 )
 
@@ -20,6 +19,4 @@ type Controller interface {
 	Tracer() trace.Tracer
 	GetTransaction(context.Context, ids.ID) (bool, int64, bool, fees.Dimensions, uint64, error)
 	GetBalanceFromState(context.Context, codec.Address) (uint64, error)
-	GetContractBytecodeFromState(context.Context, codec.Address) ([]byte, error)
-	ExecuteContractOnState(context.Context, codec.Address, codec.Address, []byte, string) (*runtime.JavyExecResult, error)
 }

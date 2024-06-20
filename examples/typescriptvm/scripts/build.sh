@@ -13,7 +13,7 @@ set -o pipefail
 export CGO_CFLAGS="-O -D__BLST_PORTABLE__"
 
 # Root directory
-TYPESCRIPTVM_PATH=$(
+MORPHEUSVM_PATH=$(
     cd "$(dirname "${BASH_SOURCE[0]}")"
     cd .. && pwd
 )
@@ -25,19 +25,19 @@ if [[ $# -eq 1 ]]; then
 elif [[ $# -eq 0 ]]; then
     # Set default binary directory location
     name="pkEmJQuTUic3dxzg8EYnktwn4W7uCHofNcwiYo458vodAUbY7"
-    BINARY_PATH=$TYPESCRIPTVM_PATH/build/$name
+    BINARY_PATH=$MORPHEUSVM_PATH/build/$name
 else
-    echo "Invalid arguments to build typescriptvm. Requires zero (default location) or one argument to specify binary location."
+    echo "Invalid arguments to build morpheusvm. Requires zero (default location) or one argument to specify binary location."
     exit 1
 fi
 
-cd "$TYPESCRIPTVM_PATH"
+cd "$MORPHEUSVM_PATH"
 
-echo "Building typescriptvm in $BINARY_PATH"
+echo "Building morpheusvm in $BINARY_PATH"
 mkdir -p "$(dirname "$BINARY_PATH")"
-go build -o "$BINARY_PATH" ./cmd/typescriptvm
+go build -o "$BINARY_PATH" ./cmd/morpheusvm
 
-CLI_PATH=$TYPESCRIPTVM_PATH/build/typescript-cli
-echo "Building typescript-cli in $CLI_PATH"
+CLI_PATH=$MORPHEUSVM_PATH/build/morpheus-cli
+echo "Building morpheus-cli in $CLI_PATH"
 mkdir -p "$(dirname "$CLI_PATH")"
-go build -o "$CLI_PATH" ./cmd/typescript-cli
+go build -o "$CLI_PATH" ./cmd/morpheus-cli
