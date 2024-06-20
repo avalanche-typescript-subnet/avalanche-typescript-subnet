@@ -10,7 +10,7 @@ import (
 
 const WASMTIME_VERSION = "v21"
 
-//go:generate bash -c "npx javy-cli emit-provider -o \"./javy_provider.wasm\""
+//go:generate bash -c "test -f ./javy_provider.wasm || curl -L https://github.com/bytecodealliance/javy/releases/download/v3.0.0/javy-quickjs_provider.wasm.gz | gunzip > ./javy_provider.wasm"
 
 //go:embed javy_provider.wasm
 var javyProviderWasm []byte
