@@ -2,6 +2,7 @@
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { emit } = require('process');
 // Extract the source file and output WASM file paths from the command line arguments
 let [sourceFile, wasmOutputFile] = process.argv.slice(2);
 
@@ -30,8 +31,23 @@ exec(`npx esbuild ${sourceFile} --bundle --outfile=${jsOutputFile}`, (err, stdou
     console.log(stdout);
 
     // Compile the JavaScript bundle to WASM with javy-cli
-
+    
     getJavyBinaryPath().then(javyBinaryPath => {
+        exec(`git rev-parse --show-toplevel`, (err, stdout, stderr) => {
+            if (err) {
+                console.error(`Error getting git root: ${stderr}`);
+                process.exit(1);
+            }
+            dir = stdout.trim();
+            exec(`${javyBinaryPath} emit-provider -o ${dir}/examples/typescriptvm/runtime/javy_provider.wasm`, (err, stdout, stderr) => {
+                if (err) {
+                    console.error(`Could not emit provider: ${stderr} in ${dir}/examples/typescriptvm/runtime/javy_provider.wasm`);
+                    process.exit(1);
+                }
+                console.log(stdout);
+                console.log(`Provider emitted to ${dir}/examples/typescriptvm/runtime/javy_provider.wasm`);
+            })
+        });
         exec(`${javyBinaryPath} compile -d ${jsOutputFile} -o ${wasmOutputFile}`, (err, stdout, stderr) => {
             if (err) {
                 console.error(`Error during WASM build: ${stderr}`);
@@ -62,7 +78,7 @@ async function getJavyBinaryPath() {
 
 
 function cacheDir(...suffixes) {
-    const cachedir = require("cachedir")
+    const cachedir = require("cachedir");
 
     const cacheDir = path.join(cachedir("bincache"), ...suffixes);
     fs.mkdirSync(cacheDir, { recursive: true });
