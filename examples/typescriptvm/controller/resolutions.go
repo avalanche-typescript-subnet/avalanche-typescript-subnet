@@ -5,7 +5,9 @@ package controller
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ava-labs/avalanchego/ids"
@@ -80,5 +82,20 @@ func (c *Controller) ExecuteContractOnState(
 		FunctionName:  funcName,
 	}
 
-	return runtime.NewJavyExec().Execute(params)
+	var callback runtime.CallbackFunc = func(address []byte) ([]byte, error) {
+		addrHex := string(address)
+
+		addressBytes, err := hex.DecodeString(strings.TrimPrefix(addrHex, "0x"))
+		if err != nil {
+			return nil, fmt.Errorf("error decoding address %s: %v", addrHex, err)
+		}
+
+		newVal, err := params.StateProvider(string(addressBytes))
+		if err != nil {
+			return nil, fmt.Errorf("error retrieving state for address %x: %v", addressBytes, err)
+		}
+		return newVal, nil
+	}
+
+	return runtime.NewJavyExec().SetCallbackFunc(callback).Execute(params)
 }

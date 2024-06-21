@@ -12,6 +12,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+//go:generate ../../../runtime/js_wcb_sdk/build.sh compile ../../integrationv2/runtime/assets/simple_counter.ts
+//go:generate cp ../../integrationv2/runtime/assets/simple_counter.wasm ./assets/simple_counter_copy.wasm
 //go:embed assets/simple_counter_copy.wasm
 var testWasmBytes []byte
 
