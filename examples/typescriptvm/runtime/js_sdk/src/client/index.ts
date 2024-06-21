@@ -22,3 +22,15 @@ export class TsChainClient {
         return BigInt(json.result.amount);
     }
 }
+
+export async function extractNodeUrlFromNetworkRunner(networkRunnerUrl: string = "http://localhost:12353"): Promise<string> {
+    const response = await fetch(`${networkRunnerUrl}/v1/control/status`, {
+        method: 'POST'
+    });
+    const data = await response.json();
+
+    const uri = data.clusterInfo.nodeInfos.node1.uri;
+    const chainId = Object.keys(data.clusterInfo.customChains)[0];
+    const nodeUrl = `${uri}/ext/bc/${chainId}`;
+    return nodeUrl;
+}
