@@ -1,7 +1,7 @@
 package runtime_test
 
-//go:generate npx ../../../runtime/js_sdk assets/simple_counter.ts
-//go:generate cp assets/simple_counter.wasm ../actions/assets/simple_counter_copy.wasm
+//go:generate ../../../runtime/js_wcb_sdk/build.sh compile assets/simple_counter.ts
+//go:generate ../../../runtime/js_wcb_sdk/build.sh emit-provider ../../../runtime/javy_provider.wasm
 
 import (
 	_ "embed"

@@ -51,6 +51,7 @@ registerFunc("readManySlots", (payload: Uint8Array, _actor: Uint8Array, getBytes
         tempResult.set(fromSlot, result.length);
         result = tempResult;
     }
+    console.log(result)
     return result;
 })
 
@@ -68,7 +69,5 @@ registerFunc("loadCPU", (payload: Uint8Array, _actor: Uint8Array, _getBytes: Get
     const summ = memoryBalloon.reduce((acc, curr) => acc + curr, 0);
     return encoder.encode(JSON.stringify(summ));
 })
-
-
 
 execute();
