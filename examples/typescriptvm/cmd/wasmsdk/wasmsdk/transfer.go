@@ -4,12 +4,16 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 )
 
-type Transfer struct {
-	// To is the recipient of the [Value].
-	To codec.Address `json:"to"`
+type CompactAction interface {
+	GetTypeID() uint8
+	Marshal(p *codec.Packer)
+}
 
-	// Amount are transferred to [To].
-	Value uint64 `json:"value"`
+var _ CompactAction = (*Transfer)(nil)
+
+type Transfer struct {
+	To    codec.Address `json:"to"`
+	Value uint64        `json:"value"`
 }
 
 func (*Transfer) GetTypeID() uint8 {
