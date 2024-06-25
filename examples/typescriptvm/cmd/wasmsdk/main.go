@@ -22,7 +22,10 @@ func generateDigest() js.Func {
 			return js.ValueOf(fmt.Sprintf("Error unmarshaling from JSON: %s", err.Error()))
 		}
 
-		digest, err := wasmsdk.Digest(&unmarshaled)
+		tx := wasmsdk.Transaction{
+			Base: &unmarshaled,
+		}
+		digest, err := tx.Digest()
 		if err != nil {
 			fmt.Println("Error generating digest:", err)
 			return js.ValueOf(fmt.Sprintf("Error generating digest: %s", err.Error()))

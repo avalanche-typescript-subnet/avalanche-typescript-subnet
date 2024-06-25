@@ -2,7 +2,6 @@ package wasmsdk_test
 
 import (
 	"testing"
-	"time"
 
 	"github.com/ava-labs/hypersdk/chain"
 	"github.com/ava-labs/hypersdk/examples/typescriptvm/actions"
@@ -11,28 +10,36 @@ import (
 )
 
 func TestDigestNil(t *testing.T) {
+	timestamp := int64(1719282804 * 1000)
+
 	base := chain.Base{
-		Timestamp: time.Now().Unix(),
+		Timestamp: timestamp,
 		ChainID:   [32]byte{0, 1, 2, 3, 4, 5},
 		MaxFee:    123456789,
 	}
-	tx := chain.NewTx(&base, nil)
-	originalDigest, err := tx.Digest()
+	fullTx := chain.NewTx(&base, nil)
+	originalDigest, err := fullTx.Digest()
 	require.NoError(t, err)
 
-	wasmDigest, err := wasmsdk.Digest(wasmsdk.Base{
-		Timestamp: time.Now().Unix(),
-		ChainID:   [32]byte{0, 1, 2, 3, 4, 5},
-		MaxFee:    123456789,
-	}, nil)
+	compactTx := wasmsdk.Transaction{
+		Base: &wasmsdk.Base{
+			Timestamp: base.Timestamp,
+			ChainID:   base.ChainID,
+			MaxFee:    base.MaxFee,
+		},
+	}
+
+	wasmDigest, err := compactTx.Digest()
 	require.NoError(t, err)
 
 	require.Equal(t, originalDigest, wasmDigest)
 }
 
 func TestDigestTransfer(t *testing.T) {
+	timestamp := int64(1719282804 * 1000)
+
 	base := chain.Base{
-		Timestamp: time.Now().Unix(),
+		Timestamp: timestamp,
 		ChainID:   [32]byte{0, 1, 2, 3, 4, 5},
 		MaxFee:    123456789,
 	}
@@ -48,15 +55,23 @@ func TestDigestTransfer(t *testing.T) {
 		},
 	}
 
-	tx := chain.NewTx(&base, actions)
-	originalDigest, err := tx.Digest()
+	fullTx := chain.NewTx(&base, actions)
+	originalDigest, err := fullTx.Digest()
 	require.NoError(t, err)
 
-	wasmDigest, err := wasmsdk.Digest(wasmsdk.Base{
-		Timestamp: time.Now().Unix(),
-		ChainID:   [32]byte{0, 1, 2, 3, 4, 5},
-		MaxFee:    123456789,
-	}, []wasmsdk.CompactAction{actions[0].(wasmsdk.CompactAction), actions[1].(wasmsdk.CompactAction)})
+	compactTx := wasmsdk.Transaction{
+		Base: &wasmsdk.Base{
+			Timestamp: base.Timestamp,
+			ChainID:   base.ChainID,
+			MaxFee:    base.MaxFee,
+		},
+		Actions: []wasmsdk.CompactAction{
+			actions[0].(wasmsdk.CompactAction),
+			actions[1].(wasmsdk.CompactAction),
+		},
+	}
+
+	wasmDigest, err := compactTx.Digest()
 	require.NoError(t, err)
 
 	require.Equal(t, originalDigest, wasmDigest)

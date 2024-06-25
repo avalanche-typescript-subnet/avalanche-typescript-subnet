@@ -4,24 +4,24 @@ import (
 	"github.com/ava-labs/hypersdk/codec"
 )
 
-type Base struct {
-	Timestamp int64    `json:"timestamp"`
-	ChainID   [32]byte `json:"chainId"`
-	MaxFee    uint64   `json:"maxFee"`
+type Transaction struct {
+	Base *Base `json:"base"`
+
+	Actions []CompactAction `json:"actions"`
+	// Auth    Auth            `json:"auth"`
+
+	// bytes     []byte
+	// size      int
+	// id        ids.ID
+	// stateKeys state.Keys
 }
 
-func (b *Base) Marshal(p *codec.Packer) {
-	p.PackInt64(b.Timestamp)
-	p.PackID(b.ChainID)
-	p.PackUint64(b.MaxFee)
-}
-
-func Digest(base Base, actions []CompactAction) ([]byte, error) {
+func (t *Transaction) Digest() ([]byte, error) {
 	p := codec.NewWriter(0, 1024)
-	base.Marshal(p)
+	t.Base.Marshal(p)
 
-	p.PackByte(uint8(len(actions)))
-	for _, action := range actions {
+	p.PackByte(uint8(len(t.Actions)))
+	for _, action := range t.Actions {
 		p.PackByte(action.GetTypeID())
 		action.Marshal(p)
 	}
