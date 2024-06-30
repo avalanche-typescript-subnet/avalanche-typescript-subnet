@@ -1,5 +1,5 @@
-import { registerFunc, encoders, GetBytesFunc, SetBytesFunc, execute } from "../../../../runtime/js_sdk";
-import { BigintToUint8Array, Uint8ArrayToBigint } from "../../../../runtime/js_sdk/src/encoders";
+import { registerFunc, GetBytesFunc, SetBytesFunc, execute } from "../../../../runtime/js_sdk/src/runtime";
+import { BigintToUint8Array, Uint8ArrayToBigint } from "../../../../runtime/js_sdk/src/runtime/encoders";
 
 const decoder = new TextDecoder();
 const encoder = new TextEncoder();

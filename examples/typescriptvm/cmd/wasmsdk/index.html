@@ -1,0 +1,32 @@
+<html>
+<title>Web Assembly Work</title>
+
+<head>
+    <meta charset="utf-8">
+    <script src="wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("/wasmsdk.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+
+            console.log('generateDigest', generateDigest)
+
+            try {
+                const digest = generateDigest(`{"timestamp":1627848123,"chainId":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32],"maxFee":1000}`)
+                console.log('digest', digest)
+            } catch (err) {
+                console.error('error', err)
+            }
+        });
+    </script>
+</head>
+
+<body>
+    <div id="main">
+        <center>
+            Check the javascript console output of your browser to ensure execution.
+        </center>
+    </div>
+</body>
+
+</html>

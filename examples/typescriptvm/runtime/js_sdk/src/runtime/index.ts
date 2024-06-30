@@ -138,4 +138,4 @@ export function execute() {
 
 export * as encoders from './encoders';
 export * as io from './javy_io';
-export * from './types.d';
+export * from './types';
